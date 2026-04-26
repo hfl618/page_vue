@@ -18,7 +18,13 @@ export default defineConfig({
           '@/api/modules/user': ['fetchMe', 'updateProfile'],
         }
       ],
-      dts: false, // 如果以后切换到 TS，可以改为 true
+      // 关键修复：自动扫描这些目录下的所有导出
+      dirs: [
+        './src/composables/**',
+        './src/views/**/hooks/**',
+        './src/components/**/hooks/**',
+      ],
+      dts: false,
     }),
     Components({
       dirs: ['src/components', 'src/layouts'], // 自动导入组件和布局

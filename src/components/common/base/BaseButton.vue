@@ -11,6 +11,7 @@ defineProps({
 </script>
 
 <template>
+  <!-- 父组件传入的 class (如 w-auto, px-10) 会自动应用到此 button 根节点 -->
   <button 
     :type="type" 
     :disabled="disabled || loading"
