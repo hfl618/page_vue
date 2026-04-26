@@ -1,0 +1,90 @@
+<script setup>
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import SidebarItem from '@/components/layout/sidebar/SidebarItem.vue'
+import GlobalHeader from '@/components/layout/header/GlobalHeader.vue'
+
+/**
+ * MainLayout 物理架构说明：
+ * 1. 物理隔离：48px 侧边栏与 弹性内容区。
+ * 2. 统一顶栏：Sticky 固定在顶部，锁定 48px 高度。
+ */
+
+const route = useRoute()
+const showUserMenu = ref(false)
+
+// 导航配置
+const navItems = [
+  { name: 'discover', path: '/discover', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
+  { name: 'discussions', path: '/discussions', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+  { name: 'knowledge', path: '/knowledge', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' }
+]
+
+const isActive = (path) => route.path.startsWith(path)
+
+// 显式关闭菜单
+const closeUserMenu = () => {
+  showUserMenu.value = false
+}
+</script>
+
+<template>
+  <div class="flex flex-row w-full h-screen overflow-hidden bg-white" translate="no" @click="closeUserMenu">
+    <!-- 侧边栏 (阻止冒泡，防止点击侧边栏误关菜单) -->
+    <aside @click.stop class="h-screen border-r border-zinc-100 flex flex-col items-center py-6 bg-white z-50 flex-shrink-0 w-[48px]">
+      <router-link to="/" class="w-6 h-6 flex items-center justify-center mb-10 bg-zinc-900 text-white rounded-0 cursor-pointer hover:bg-black transition-colors shadow-[2px_2px_0px_#f4f4f5]">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      </router-link>
+
+      <div class="flex flex-col gap-1 w-full items-center">
+        <SidebarItem v-for="item in navItems" :key="item.name" :to="item.path" :active="isActive(item.path)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.0"><path :d="item.icon" /></svg>
+        </SidebarItem>
+      </div>
+
+      <div class="mt-auto flex flex-col w-full items-center relative pb-4">
+        <button @click.stop="showUserMenu = !showUserMenu" class="group outline-none">
+          <div class="w-7 h-7 border-2 border-zinc-900 grayscale shadow-[2px_2px_0px_#f4f4f5] group-hover:shadow-none transition-all group-active:translate-x-0.5 group-active:translate-y-0.5 overflow-hidden">
+            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" class="w-full h-full object-cover">
+          </div>
+        </button>
+        <!-- 用户菜单 -->
+        <div v-show="showUserMenu" @click.stop class="absolute left-12 bottom-0 w-48 bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] z-[100] p-1 animate-in slide-in-from-left-2 duration-200">
+          <div class="flex flex-col gap-1">
+            <router-link to="/profile" @click="closeUserMenu" class="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 transition-colors group">
+              <svg class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              <span class="text-[11px] font-black text-zinc-600 group-hover:text-zinc-900 uppercase tracking-widest">Profile</span>
+            </router-link>
+            <router-link to="/settings" @click="closeUserMenu" class="flex items-center gap-3 px-3 py-2 hover:bg-zinc-50 transition-colors group">
+              <svg class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.756 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.756 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.756 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.756 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.756 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.756 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.756 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span class="text-[11px] font-black text-zinc-600 group-hover:text-zinc-900 uppercase tracking-widest">Settings</span>
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主体区域 -->
+    <main class="flex-1 h-full relative min-w-0 bg-[#fafafa] flex flex-col overflow-hidden">
+      <!-- 统一顶栏 -->
+      <GlobalHeader 
+        :parent-label="route.meta.parent || ''" 
+        :current-label="route.name?.toUpperCase() || 'CORE'"
+      />
+
+      <!-- 内容区滚动 -->
+      <div id="content-container" class="flex-1 overflow-y-auto custom-scrollbar">
+        <router-view v-slot="{ Component }">
+          <transition name="fade-quick" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </div>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+.fade-quick-enter-active, .fade-quick-leave-active { transition: opacity 0.15s ease; }
+.fade-quick-enter-from, .fade-quick-leave-to { opacity: 0; }
+</style>
