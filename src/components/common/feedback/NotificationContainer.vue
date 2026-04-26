@@ -8,7 +8,7 @@ const { notices } = storeToRefs(uiStore)
 </script>
 
 <template>
-  <div id="heflos-notification-container" class="fixed bottom-8 right-8 z-[10000] flex flex-col gap-4 w-80 pointer-events-none">
+  <div id="heflos-notification-container" class="fixed bottom-8 right-8 z-[10000] flex flex-col gap-3 w-72 pointer-events-none">
     <TransitionGroup 
       name="notice"
       enter-active-class="transition ease-out duration-300"
@@ -19,7 +19,7 @@ const { notices } = storeToRefs(uiStore)
       leave-to-class="translate-x-4 opacity-0"
     >
       <div v-for="n in notices" :key="n.id" v-show="n.visible"
-           class="pointer-events-auto border shadow-[4px_4px_0px_#f4f4f5] p-5 flex items-start gap-4 relative overflow-hidden bg-white"
+           class="pointer-events-auto border shadow-[4px_4px_0px_#f4f4f5] p-3.5 flex items-start gap-3 relative overflow-hidden bg-white"
            :class="{
               'bg-emerald-50 border-emerald-500 shadow-emerald-500/10': n.type === 'success',
               'bg-red-50 border-red-500 shadow-red-500/10': n.type === 'error',

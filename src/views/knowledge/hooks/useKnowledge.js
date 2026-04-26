@@ -6,7 +6,7 @@ import { useUiStore } from '@/store/ui'
 import request from '@/api/request'
 
 /**
- * @description 知识库列表业务逻辑抽离
+ * @description 知识库列表业务逻辑 (支持多选批量操作)
  */
 export function useKnowledgeList() {
   const router = useRouter()
@@ -14,7 +14,7 @@ export function useKnowledgeList() {
   const userStore = useUserStore()
   const uiStore = useUiStore()
 
-  // 状态定义
+  // 1. 基础状态
   const viewMode = ref('community')
   const currentStack = ref(null)
   const showDirectory = ref(false)
@@ -22,121 +22,130 @@ export function useKnowledgeList() {
   const currentPage = ref(1)
   const itemsPerPage = ref(10)
   
-  // 追踪正在执行异步操作的 ID (格式: 'id-action')
+  // 2. 交互状态
   const processingIds = ref(new Set())
+  const selectedIds = ref(new Set()) // 存储选中的文章 ID
 
-  // 监听每页条数变化，重置页码
-  watch(itemsPerPage, () => {
-    currentPage.value = 1
-  })
+  watch(itemsPerPage, () => { currentPage.value = 1 })
+
+  // 3. 多选逻辑
+  const toggleSelection = (id) => {
+    if (selectedIds.value.has(id)) {
+      selectedIds.value.delete(id)
+    } else {
+      selectedIds.value.add(id)
+    }
+  }
+
+  const toggleAll = () => {
+    const currentItems = paginatedItems.value
+    const allSelected = currentItems.length > 0 && currentItems.every(i => selectedIds.value.has(i.id))
+    
+    if (allSelected) {
+      currentItems.forEach(i => selectedIds.value.delete(i.id))
+    } else {
+      currentItems.forEach(i => selectedIds.value.add(i.id))
+    }
+  }
+
+  const clearSelection = () => selectedIds.value.clear()
 
   /**
-   * @description 处理删除协议
+   * @description 批量删除协议
    */
+  const handleBatchDelete = async () => {
+    const ids = Array.from(selectedIds.value)
+    if (ids.length === 0) return
+
+    uiStore.showLoading('PURGING', `Wiping ${ids.length} entries from registry...`)
+    try {
+      await Promise.all(ids.map(id => request.post('/v1/knowledge/delete', { id }, { hideLoading: true })))
+      uiStore.addNotice({ title: 'BATCH_PURGE_SUCCESS', message: 'Registry integrity maintained.', type: 'success' })
+      clearSelection()
+      await knowledgeStore.syncArticles(true)
+    } finally {
+      uiStore.hideLoading()
+    }
+  }
+
+  /**
+   * @description 批量合并到合集
+   */
+  const handleBatchMerge = async () => {
+    const ids = Array.from(selectedIds.value)
+    if (ids.length < 2) {
+      uiStore.addNotice({ title: 'PROTOCOL_ERR', message: 'Minimum 2 units required for stacking.', type: 'warning' })
+      return
+    }
+    uiStore.addNotice({ title: 'LINKING', message: 'Establishing bundle sequence...', type: 'info' })
+  }
+
+  // 4. 基础业务方法
+  const handleTogglePrivacy = async (article) => {
+    const actionKey = `${article.id}-privacy`
+    processingIds.value.add(actionKey)
+    try {
+      const newVisibility = article.visibility === 'public' ? 'private' : 'public'
+      await request.post('/v1/knowledge/save', { id: article.id, visibility: newVisibility }, { hideLoading: true })
+      await knowledgeStore.syncArticles(true, { hideLoading: true })
+    } finally { processingIds.value.delete(actionKey) }
+  }
+
   const handleDeleteArticle = async (article) => {
     const actionKey = `${article.id}-delete`
     processingIds.value.add(actionKey)
-    
     try {
-      // 模拟后端处理
-      await new Promise(resolve => setTimeout(resolve, 1200))
+      await request.post('/v1/knowledge/delete', { id: article.id }, { hideLoading: true })
       uiStore.addNotice({ title: 'REGISTRY_PURGED', message: `Entry [${article.title}] removed.`, type: 'success' })
-      await knowledgeStore.syncArticles(true)
-    } catch (e) {
-      console.error('Purge Failed', e)
-    } finally {
-      processingIds.value.delete(actionKey)
-    }
+      await knowledgeStore.syncArticles(true, { hideLoading: true })
+    } finally { processingIds.value.delete(actionKey) }
   }
 
-  // 初始化加载
   const init = async () => {
     try {
-      const syncTask = knowledgeStore.syncArticles(true).catch(e => {
-        console.warn('Sync Articles Failed:', e)
-        return []
-      })
-      const profileTask = userStore.fetchProfile().catch(e => {
-        console.warn('Fetch Profile Failed:', e)
-        return null
-      })
+      const syncTask = knowledgeStore.syncArticles(true).catch(() => [])
+      const profileTask = userStore.fetchProfile().catch(() => null)
       await Promise.allSettled([syncTask, profileTask])
-      await nextTick()
-    } catch (e) {
-      console.error('Core Initialization Error:', e)
-    } finally {
-      setTimeout(() => uiStore.hideLoading(), 500)
-    }
+    } finally { setTimeout(() => uiStore.hideLoading(), 500) }
   }
 
-  // 权限检查
-  const isStackOwner = computed(() => {
-    if (!currentStack.value || !userStore.currentUser?.id) return false
-    return String(currentStack.value.user_id) === String(userStore.currentUser.id)
-  })
+  const openStack = (article) => { currentStack.value = article; window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
-  // 核心过滤逻辑
+  // 5. 计算属性
   const filteredArticles = computed(() => {
     const all = knowledgeStore.articles || []
     if (currentStack.value) return currentStack.value.children || []
     if (viewMode.value === 'personal') {
-      if (!userStore.currentUser?.id) return []
-      return all.filter(a => String(a.user_id) === String(userStore.currentUser.id))
+      return all.filter(a => String(a.user_id) === String(userStore.currentUser?.id))
     }
     return all.filter(a => a.visibility === 'public')
   })
 
-  // 索引搜索
   const indexItems = computed(() => {
-    const base = currentStack.value ? [currentStack.value, ...(currentStack.value.children || [])] : filteredArticles.value
+    const base = currentStack.value ? [currentStack.value, ...(currentStack.value.children || [])] : knowledgeStore.articles
     const q = dirSearch.value.toLowerCase()
-    return base.filter(i => (i.title || '').toLowerCase().includes(q))
+    return (base || []).filter(i => (i.title || '').toLowerCase().includes(q))
   })
 
-  // 分页计算
+  const paginatedItems = computed(() => {
+    return indexItems.value.slice((currentPage.value - 1) * itemsPerPage.value, currentPage.value * itemsPerPage.value)
+  })
+
   const totalPages = computed(() => Math.ceil(indexItems.value.length / itemsPerPage.value) || 1)
-  const paginatedItems = computed(() => indexItems.value.slice((currentPage.value - 1) * itemsPerPage.value, currentPage.value * itemsPerPage.value))
-  const visiblePages = computed(() => {
-    let pages = []
-    for (let i = 1; i <= totalPages.value; i++) pages.push(i)
-    return pages
-  })
 
-  // 操作方法
-  const goToPage = (p) => { if (p >= 1 && p <= totalPages.value) currentPage.value = p }
-  const openStack = (article) => { currentStack.value = article; window.scrollTo({ top: 0, behavior: 'smooth' }) }
-  
-  const unstack = async (id) => {
-    if (!id || !isStackOwner.value) return
-    uiStore.showLoading('UNSTACKING', 'Breaking hierarchy...')
-    try {
-      await request.post('/v1/knowledge/save', { id, parent_id: null })
-      await knowledgeStore.syncArticles(true)
-      if (currentStack.value) currentStack.value.children = currentStack.value.children.filter(c => c.id !== id)
-      uiStore.addNotice({ title: 'SUCCESS', message: 'Registry unstacked.', type: 'success' })
-    } finally { uiStore.hideLoading() }
-  }
+  const visiblePages = computed(() => {
+    return Array.from({length: totalPages.value}, (_, i) => i + 1)
+  })
 
   return {
-    viewMode,
-    currentStack,
-    showDirectory,
-    dirSearch,
-    currentPage,
-    itemsPerPage,
-    isStackOwner,
+    viewMode, currentStack, showDirectory, dirSearch, currentPage, itemsPerPage,
+    processingIds, selectedIds,
     filteredArticles,
     indexItems,
     paginatedItems,
     totalPages,
     visiblePages,
-    processingIds,
-    handleDeleteArticle,
-    init,
-    goToPage,
-    openStack,
-    unstack,
-    userStore,
-    router
+    init, toggleSelection, toggleAll, clearSelection, handleBatchDelete, handleBatchMerge,
+    handleDeleteArticle, handleTogglePrivacy, openStack, userStore, router
   }
 }

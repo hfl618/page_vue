@@ -18,7 +18,7 @@ const emit = defineEmits(['toggle-fav'])
 </script>
 
 <template>
-  <div class="tool-paper-card p-4 flex flex-col justify-between group h-[175px] bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] hover:-translate-x-1 hover:scale-[1.02] hover:shadow-[10px_8px_0px_#f4f4f5] transition-all duration-300 rounded-0 relative overflow-hidden text-left" translate="no">
+  <div class="tool-paper-card p-4 flex flex-col justify-between group h-[160px] bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] hover:-translate-x-1 hover:scale-[1.02] hover:shadow-[10px_8px_0px_#f4f4f5] transition-all duration-300 rounded-0 relative overflow-hidden text-left" translate="no">
     
     <!-- 右上角：收藏按钮 (原子化) -->
     <div class="absolute top-3 right-3 z-30 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -70,7 +70,7 @@ const emit = defineEmits(['toggle-fav'])
     <div class="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-white z-20">
       <BaseButton 
         :href="url" 
-        class="!rounded-0 !py-3 shadow-none active:translate-x-0 active:translate-y-0"
+        class="!rounded-none !py-2.5 shadow-none active:translate-x-0 active:translate-y-0"
       >
         <span class="text-[10px] font-black uppercase tracking-[0.3em]">Launch Module</span>
       </BaseButton>

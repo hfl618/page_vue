@@ -14,6 +14,7 @@ export const fetchMe = () => request.get('/v1/user/me')
 /**
  * @description 更新用户个人资料
  * @param {Object} data 待更新的用户字段
+ * @param {Object} [config] axios 配置
  * @returns {Promise}
  */
-export const updateProfile = (data) => request.post('/v1/user/update', data)
+export const updateProfile = (data, config = {}) => request.post('/v1/user/update', data, config)

@@ -30,7 +30,7 @@ export default defineConfig({
       dts: false,
     }),
     Components({
-      dirs: ['src/components', 'src/layouts'], // 自动导入组件和布局
+      dirs: ['src/components', 'src/layouts', 'src/views/**/components'], // 增加页面组件扫描
       extensions: ['vue'],
       deep: true,
     }),

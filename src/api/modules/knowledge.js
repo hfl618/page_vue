@@ -13,9 +13,10 @@ export const fetchUserArticles = () => request.get('/v1/user/articles')
 
 /**
  * @description 获取全站公共探索文章列表
+ * @param {Object} [config] - axios 配置
  * @returns {Promise<Array>}
  */
-export const fetchPublicArticles = () => request.get('/v1/knowledge/list')
+export const fetchPublicArticles = (config = {}) => request.get('/v1/knowledge/list', config)
 
 /**
  * @description 根据 ID 获取单篇文章详情

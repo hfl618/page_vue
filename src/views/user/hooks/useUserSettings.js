@@ -32,8 +32,9 @@ export function useUserSettings() {
   const handleSave = async () => {
     loading.value = true
     try {
-      await updateProfile(form)
-      await userStore.fetchProfile() // 重新同步全局 Store
+      // 屏蔽全局 Loading，使用按钮自带的局部 Loading 效果
+      await updateProfile(form, { hideLoading: true })
+      await userStore.fetchProfile() 
       uiStore.addNotice({ title: 'SUCCESS', message: 'Registry protocol updated.', type: 'success' })
     } catch (err) {
       console.error('Update Failed:', err)
@@ -56,13 +57,13 @@ export function useUserSettings() {
     const formData = new FormData()
     formData.append('avatar', file)
 
-    uiStore.showLoading('UPLOADING', 'Transmitting identity data...')
+    // 头像上传也改为静默模式
     try {
-      await request.post('/v1/user/avatar', formData)
+      await request.post('/v1/user/avatar', formData, { hideLoading: true })
       await userStore.fetchProfile()
       uiStore.addNotice({ title: 'SUCCESS', message: 'Avatar synchronized.', type: 'success' })
     } finally {
-      uiStore.hideLoading()
+      // 局部加载状态由调用方控制，或此处无需额外 Loading
     }
   }
 
