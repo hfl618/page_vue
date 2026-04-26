@@ -6,6 +6,7 @@ defineProps({
   name: String,
   description: String,
   iconPath: String,
+  iconUrl: { type: String, default: null }, // 新增图片图标支持
   tag: { type: String, default: 'UTILITY' },
   version: { type: String, default: 'V1.0.0' },
   author: { type: String, default: 'SYSTEM' },
@@ -15,12 +16,18 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle-fav'])
+
+const imgLoaded = ref(false)
+const onImageLoad = () => {
+  imgLoaded.value = true
+}
 </script>
 
 <template>
   <div class="tool-paper-card p-[15px] flex flex-col justify-between group h-[160px] bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] hover:-translate-x-1 hover:scale-[1.02] hover:shadow-[10px_8px_0px_#f4f4f5] transition-all duration-300 rounded-0 relative overflow-hidden text-left" translate="no">
     
     <!-- 右上角：收藏按钮 (原子化) -->
+    <!-- ... (保持不变) ... -->
     <div class="absolute top-2.5 right-2.5 z-30 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
       <BaseIconButton 
         :active="favStatus"
@@ -36,13 +43,22 @@ const emit = defineEmits(['toggle-fav'])
       <!-- 1. 顶部行 -->
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 border border-zinc-900 flex items-center justify-center bg-zinc-100 shrink-0 overflow-hidden relative p-1.5">
-          <svg class="w-5 h-5 text-zinc-900 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <!-- 1. 图片图标：增加懒加载与淡入效果 -->
+          <img v-if="iconUrl" 
+               :src="iconUrl" 
+               loading="lazy"
+               @load="onImageLoad"
+               class="w-full h-full object-contain relative z-10 transition-opacity duration-500 opacity-0"
+               :class="{ 'opacity-100': imgLoaded }">
+          
+          <!-- 2. SVG 图标占位 -->
+          <svg v-else class="w-5 h-5 text-zinc-900 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" :d="iconPath" />
           </svg>
         </div>
         <div class="flex-1 min-w-0 pr-8">
           <div class="flex items-baseline gap-2 overflow-hidden">
-            <BaseTitle level="h3" size="text-[13px]" class="line-clamp-1 leading-none">
+            <BaseTitle level="h3" size="text-[13px]" class="line-clamp-2 leading-tight !font-bold">
               {{ name }}
             </BaseTitle>
           </div>
@@ -53,9 +69,7 @@ const emit = defineEmits(['toggle-fav'])
       <div class="flex flex-col gap-1.5">
         <div class="flex items-center gap-2">
           <BaseTag>#{{ tag }}</BaseTag>
-          <BaseTag v-if="isCore" color-class="text-white" bg-class="bg-zinc-900" border-color-class="border-zinc-900">
-            Core
-          </BaseTag>
+          <BaseTag v-if="isCore">Core</BaseTag>
         </div>
         <p class="text-[10px] text-zinc-400 font-bold leading-relaxed line-clamp-2 italic">{{ description }}</p>
       </div>
@@ -63,7 +77,7 @@ const emit = defineEmits(['toggle-fav'])
 
     <!-- 3. 底部元数据 -->
     <div class="mt-auto pt-3 border-t border-zinc-50 flex items-center justify-between group-hover:opacity-0 transition-opacity duration-200">
-      <span class="text-[8px] font-black text-zinc-300 uppercase tracking-widest">DEPLOYED BY @{{ author }}</span>
+      <span class="text-[8px] font-bold text-zinc-300 uppercase tracking-widest">DEPLOYED BY @{{ author }}</span>
       <div class="flex items-center gap-2">
         <span class="text-[8px] font-bold font-mono text-zinc-200 uppercase tracking-tighter">{{ version }}</span>
         <svg class="w-3 h-3 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
@@ -76,7 +90,7 @@ const emit = defineEmits(['toggle-fav'])
         :href="url" 
         class="!rounded-none !h-7 shadow-none active:translate-x-0 active:translate-y-0"
       >
-        <span class="text-[8px] font-black uppercase tracking-[0.3em]">Launch Module</span>
+        <span class="text-[8px] font-bold uppercase tracking-[0.3em]">Launch Module</span>
       </BaseButton>
     </div>
   </div>

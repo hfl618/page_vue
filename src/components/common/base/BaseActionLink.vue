@@ -12,7 +12,7 @@ defineProps({
   // 悬停时下划线的颜色
   activeBorderClass: { type: String, default: 'hover:border-zinc-900' },
   // 是否加粗
-  bold: { type: Boolean, default: true }
+  bold: { type: Boolean, default: false }
 })
 </script>
 

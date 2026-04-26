@@ -1,34 +1,32 @@
 <script setup>
 /**
- * @description 全局同步等待层 - 1:1 工业化物理还原版
- * 严格对标原版尺寸、阴影与模糊度。
+ * @description 全局同步等待层 - 工业化物理 2.0 版
  */
 const uiStore = useUiStore()
 </script>
 
 <template>
-  <Transition name="fade">
+  <Transition name="loading-zoom">
     <div v-if="uiStore.loading.show" class="fixed inset-0 z-[200000] flex items-center justify-center bg-white/10 backdrop-blur-xl" translate="no">
       
-      <!-- 1:1 还原的外层容器 -->
-      <div class="border border-zinc-900 shadow-[4px_4px_0px_rgba(0,0,0,0.15)] px-12 py-10 flex flex-col items-center gap-8" 
-           style="background-color: rgba(255, 255, 255, 0.6); backdrop-filter: blur(48px); -webkit-backdrop-filter: blur(48px);">
+      <!-- 物理容器：增加进场缩放动画 -->
+      <div class="loading-box border border-zinc-900 shadow-[8px_8px_0px_rgba(0,0,0,0.1)] px-12 py-10 flex flex-col items-center gap-8 bg-white/80">
         
         <!-- 核心 Loader 单元 -->
-        <div class="w-12 h-12 border-2 border-zinc-900/10 flex items-center justify-center relative">
-          <div class="w-5 h-5 bg-zinc-900 heflos-loader-square"></div>
-          <div class="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-zinc-900"></div>
-          <div class="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-zinc-900"></div>
+        <div class="w-14 h-14 border-2 border-zinc-900/10 flex items-center justify-center relative">
+          <div class="heflos-loader-square"></div>
+          <!-- 装饰角 -->
+          <div class="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-zinc-900"></div>
+          <div class="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-zinc-900"></div>
         </div>
         
-        <!-- 文本与进度单元 -->
+        <!-- 文本与进度 -->
         <div class="flex flex-col items-center gap-3">
           <div class="flex flex-col items-center text-center">
-            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">{{ uiStore.loading.title || 'LOADING' }}</span>
-            <span class="text-[11px] font-black text-zinc-900 uppercase tracking-tight mt-1">{{ uiStore.loading.subtitle || 'ACCESSING ARCHIVE' }}</span>
+            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">{{ uiStore.loading.title || 'TRANSMITTING' }}</span>
+            <span class="text-[11px] font-black text-zinc-900 uppercase tracking-tight mt-1">{{ uiStore.loading.subtitle || 'SYNC_CORE_ACTIVE' }}</span>
           </div>
           
-          <!-- 进度条系统 -->
           <div class="flex flex-col items-center gap-2 mt-4">
             <div class="w-56 h-1 bg-zinc-100 relative overflow-hidden">
               <div class="absolute inset-y-0 left-0 bg-zinc-900 transition-all duration-300" 
@@ -44,6 +42,36 @@ const uiStore = useUiStore()
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+/* 容器缩放淡入动画 */
+.loading-zoom-enter-active, .loading-zoom-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.loading-zoom-enter-from, .loading-zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+/* 核心方块：物理旋转、圆角、缩放动画 */
+.heflos-loader-square {
+  width: 24px;
+  height: 24px;
+  background-color: #18181b;
+  animation: square-physics 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes square-physics {
+  0% { 
+    transform: rotate(0deg) scale(1); 
+    border-radius: 0; 
+  }
+  50% { 
+    transform: rotate(270deg) scale(0.4); 
+    border-radius: 50%;
+    background-color: #3f3f46;
+  }
+  100% { 
+    transform: rotate(360deg) scale(1); 
+    border-radius: 0; 
+  }
+}
 </style>

@@ -21,6 +21,7 @@ export const fetchPublicArticles = (config = {}) => request.get('/v1/knowledge/l
 /**
  * @description 根据 ID 获取单篇文章详情
  * @param {string|number} id 文章唯一标识
+ * @param {Object} [config] - axios 配置
  * @returns {Promise<Object>} 文章详情数据
  */
-export const fetchArticleDetail = (id) => request.get(`/v1/knowledge/read/${id}`)
+export const fetchArticleDetail = (id, config = {}) => request.get(`/v1/knowledge/read/${id}`, config)

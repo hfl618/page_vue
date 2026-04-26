@@ -29,33 +29,47 @@ export function useKnowledgeReader() {
   }
 
   /**
-   * @description 获取文章详情
+   * @description 获取文章详情 (物理加速版)
    */
   const fetchDetail = async () => {
     const id = route.params.id
-    if (!id) {
-      uiStore.addNotice({ title: 'PARAM_ERROR', message: 'Invalid article sequence.', type: 'error' })
+    if (!id) return
+
+    // 物理加固：如果是 mock 数据，直接停止请求，防止 404 弹窗
+    if (String(id).startsWith('mock-')) {
+      console.info('Mock Protocol Detected, skipping cloud sync.')
+      const knowledgeCache = localStorage.getItem('heflos_knowledge_cache')
+      if (knowledgeCache) {
+        const articles = JSON.parse(knowledgeCache)
+        const found = articles.find(a => String(a.id) === String(id))
+        if (found) {
+          article.value = { ...found, content: found.content || '## MOCK_DATA\nThis is a simulation protocol.' }
+          return 
+        }
+      }
       return
     }
 
-    uiStore.showLoading('SYNCHRONIZING', 'Accessing Registry...')
+    // 1. 尝试从知识库缓存中寻找摘要 (SWR)
+    const knowledgeCache = localStorage.getItem('heflos_knowledge_cache')
+    if (knowledgeCache) {
+      const articles = JSON.parse(knowledgeCache)
+      const found = articles.find(a => String(a.id) === String(id))
+      if (found) {
+        article.value = { ...found, content: found.content || 'Decrypting transmission...' }
+      }
+    }
+
+    // 2. 静默请求完整内容，不再显示全局 Loading
     try {
-      const data = await fetchArticleDetail(id)
+      // 显式指定超时与静默加载
+      const data = await fetchArticleDetail(id, { timeout: 10000, hideLoading: true })
       if (data) {
         article.value = data
         wordCount.value = calculateWords(data.content)
-      } else {
-        throw new Error('Null sequence received.')
       }
     } catch (e) {
-      console.error('Fetch Detail Error:', e)
-      uiStore.addNotice({ 
-        title: 'SYNC_TIMEOUT', 
-        message: 'Backend node not responding. Please check server status.', 
-        type: 'error' 
-      })
-    } finally {
-      uiStore.hideLoading()
+      console.warn('Backend sync failed, showing cached data only.')
     }
   }
 

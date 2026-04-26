@@ -5,7 +5,7 @@ import { storage } from '@/utils/storage'
 
 const service = axios.create({
   baseURL: '/api',
-  timeout: 15000, // 缩短至 15s
+  timeout: 60000, // 强制改为 60s
   withCredentials: true
 })
 
@@ -33,11 +33,14 @@ service.interceptors.response.use(
     const config = response.config
 
     if (res.code !== RESPONSE_CODES.SUCCESS && res.code !== undefined) {
-      uiStore.addNotice({
-        title: 'PROTOCOL_ERROR',
-        message: res.msg || 'Unknown failure.',
-        type: 'error'
-      })
+      // 物理加固：如果是后台静默请求，不弹出报错弹窗
+      if (!config.hideLoading) {
+        uiStore.addNotice({
+          title: 'PROTOCOL_ERROR',
+          message: res.msg || 'Unknown failure.',
+          type: 'error'
+        })
+      }
       return Promise.reject(new Error(res.msg || 'Error'))
     }
 

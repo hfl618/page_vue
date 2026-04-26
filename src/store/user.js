@@ -9,7 +9,9 @@ import { STORAGE_KEYS } from '@/constants'
  * @description 用户身份与全局权限状态
  */
 export const useUserStore = defineStore('user', () => {
-  const currentUser = ref({
+  // 从缓存中恢复用户信息
+  const cachedUser = storage.get(STORAGE_KEYS.USER_INFO)
+  const currentUser = ref(cachedUser || {
     id: null,
     username: '',
     avatar: '',
@@ -20,16 +22,21 @@ export const useUserStore = defineStore('user', () => {
   const isLoggedIn = ref(!!storage.get(STORAGE_KEYS.TOKEN))
 
   /**
-   * @description 同步用户信息
+   * @description 同步用户信息 (静默模式)
    */
   const fetchProfile = async () => {
     try {
-      const data = await fetchMe()
+      // 增加 hideLoading: true，彻底解决跳转时的卡顿感
+      const data = await fetchMe({ hideLoading: true })
       currentUser.value = data
       isLoggedIn.value = true
+      storage.set(STORAGE_KEYS.USER_INFO, data)
       return data
     } catch (err) {
-      isLoggedIn.value = false
+      // 失败时不清除本地数据，保留离线状态显示
+      if (!storage.get(STORAGE_KEYS.TOKEN)) {
+        isLoggedIn.value = false
+      }
       throw err
     }
   }

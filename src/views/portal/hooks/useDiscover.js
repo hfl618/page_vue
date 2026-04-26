@@ -1,81 +1,65 @@
 import { ref, computed } from 'vue'
+import { fetchCloudTools, toggleToolFavorite } from '@/api/modules/tools'
+import { useUiStore } from '@/store/ui'
 
 /**
- * @description 发现页（工具库）业务逻辑
+ * @description 发现页（工具库）业务逻辑 - 极端物理容错版
  */
 export function useDiscover() {
+  const uiStore = useUiStore()
   const activeCategory = ref('All')
   const navCategories = ref(['All', 'Favorites'])
   const showConfigModal = ref(false)
   const allTools = ref([])
   const loading = ref(false)
 
-  // 1. 配置池 (所有可选分类)
+  // 1. 配置池 (固化预设，防止后端 404 导致 UI 闪烁)
   const allPool = ref([
-    { id: 1, name: 'General' },
-    { id: 2, name: 'Embedded' },
-    { id: 3, name: 'Python' },
-    { id: 4, name: 'Hardware' },
-    { id: 5, name: 'Web API' },
-    { id: 6, name: 'Tools' },
-    { id: 7, name: 'AI ML' },
-    { id: 8, name: 'Robotics' },
-    { id: 9, name: 'Test' },
-    { id: 10, name: 'Storage' }
+    { id: 1, name: 'General' }, { id: 2, name: 'Embedded' },
+    { id: 3, name: 'Python' }, { id: 4, name: 'Hardware' },
+    { id: 5, name: 'Web API' }, { id: 6, name: 'Tools' },
+    { id: 7, name: 'AI ML' }, { id: 8, name: 'Robotics' },
+    { id: 9, name: 'Test' }, { id: 10, name: 'Storage' }
   ])
   
-  // 临时状态（用于弹窗编辑）
   const tempNav = ref([])
 
-  // 模拟数据（未来可改为 API 请求）
-  const mockTools = [
-    {
-      name: 'Inventory System',
-      description: 'Hardware and component stocks management.',
-      iconPath: 'M13 10V3L4 14h7v7l9-11h-7z',
-      tag: 'Utility',
-      version: 'V1.2.0',
-      isCore: true,
-      favStatus: true,
-      author: 'HEFLOS',
-      url: '/tools/inventory'
-    },
-    {
-      name: 'Cloud Drive',
-      description: 'Centralized engineering assets storage.',
-      iconPath: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12',
-      tag: 'Utility',
-      version: 'V2.0.4',
-      isCore: true,
-      favStatus: false,
-      author: 'SYSTEM',
-      url: '/tools/drive'
-    },
-    {
-      name: 'Serial Port',
-      description: 'Real-time embedded debugging terminal.',
-      iconPath: 'M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-      tag: 'Hardware',
-      version: 'V0.9.1',
-      isCore: false,
-      favStatus: true,
-      author: 'LAB_TECH',
-      url: '/tools/serial'
+  /**
+   * @description 从云端同步数据 (极速 5s 超时)
+   */
+  const syncCloudData = async () => {
+    // 优先读取本地缓存
+    const cache = localStorage.getItem('heflos_tools_cache')
+    if (cache) allTools.value = JSON.parse(cache)
+
+    try {
+      // 物理级静默同步，仅针对已部署的 list 接口
+      const tools = await fetchCloudTools({ 
+        timeout: 5000, 
+        hideLoading: true 
+      })
+      
+      if (tools) {
+        const mappedData = tools.map(t => ({
+          id: t.path, name: t.label || t.name, description: t.description,
+          iconPath: t.icon_path, iconUrl: t.icon_url, tag: t.tag,
+          version: t.version, isCore: t.is_core === 1,
+          favStatus: t.fav_status, author: t.author, url: t.url
+        }))
+        allTools.value = mappedData
+        localStorage.setItem('heflos_tools_cache', JSON.stringify(mappedData))
+      }
+    } catch (err) {
+      console.warn('Background sync timed out, running on cache.')
+    } finally {
+      loading.value = false
     }
-  ]
+  }
 
   const init = () => {
-    // 加载数据
-    allTools.value = mockTools
-    
-    // 加载持久化导航
+    syncCloudData()
     const saved = localStorage.getItem('heflos_discover_nav')
-    if (saved) {
-      navCategories.value = JSON.parse(saved)
-    } else {
-      navCategories.value = ['All', 'Favorites', 'Utility', 'Hardware']
-    }
-    // 同步临时状态
+    if (saved) navCategories.value = JSON.parse(saved)
     tempNav.value = [...navCategories.value]
   }
 
@@ -87,10 +71,7 @@ export function useDiscover() {
     })
   })
 
-  const setCategory = (cat) => {
-    activeCategory.value = cat
-  }
-
+  const setCategory = (cat) => { activeCategory.value = cat }
   const toggleTempNav = (name) => {
     if (tempNav.value.includes(name)) {
       tempNav.value = tempNav.value.filter(n => n !== name)
@@ -106,16 +87,7 @@ export function useDiscover() {
   }
 
   return {
-    activeCategory,
-    navCategories,
-    showConfigModal,
-    allPool,
-    tempNav,
-    filteredTools,
-    loading,
-    init,
-    setCategory,
-    toggleTempNav,
-    applyNav
+    activeCategory, navCategories, showConfigModal, allPool, tempNav,
+    filteredTools, loading, init, setCategory, toggleTempNav, applyNav
   }
 }

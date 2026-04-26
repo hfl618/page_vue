@@ -1,25 +1,6 @@
-/* -------------------------------------------------------------------------- */
-/* INDUSTRIAL ANIMATIONS                                                      */
-/* -------------------------------------------------------------------------- */
+/* 工业风辅助工具类 - 物理加固版 */
 
-@keyframes square-morph {
-  0% { transform: rotate(0deg) scale(1); border-radius: 0; }
-  50% { transform: rotate(180deg) scale(0.6); border-radius: 50%; }
-  100% { transform: rotate(360deg) scale(1); border-radius: 0; }
-}
-
-.heflos-loader-square {
-  animation: square-morph 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.animate-square-morph {
-  @apply heflos-loader-square;
-}
-
-/* -------------------------------------------------------------------------- */
-/* CUSTOM SCROLLBAR                                                           */
-/* -------------------------------------------------------------------------- */
-
+/* 隐藏滚动条但保留功能 */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -27,21 +8,9 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e4e4e7;
+  border-radius: 0px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #18181b;
-}
-
-/* -------------------------------------------------------------------------- */
-/* ATOMIC UTILS                                                              */
-/* -------------------------------------------------------------------------- */
-
-.text-truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.flex-center {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }

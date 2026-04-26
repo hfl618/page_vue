@@ -57,6 +57,11 @@ export default defineConfig({
       '/upload': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+      },
+      // 关键：允许前端获取后端存放的工具图标
+      '/tools/icon': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
       }
     }
   }

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 
@@ -11,6 +11,12 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const showUserMenu = ref(false)
+
+// 物理优化：跳转时自动重置滚动条到顶部，防止“滚动块”残留
+watch(() => route.path, () => {
+  const container = document.getElementById('content-container')
+  if (container) container.scrollTop = 0
+})
 
 // 导航配置
 const navItems = [

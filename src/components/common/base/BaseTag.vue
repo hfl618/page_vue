@@ -6,12 +6,12 @@
 defineProps({
   // 文字颜色
   colorClass: { type: String, default: 'text-zinc-400' },
-  // 背景颜色 (建议使用浅色系)
-  bgClass: { type: String, default: 'bg-transparent' },
+  // 背景颜色
+  bgClass: { type: String, default: 'bg-zinc-100' },
   // 边框颜色
-  borderColorClass: { type: String, default: 'border-zinc-100' },
+  borderColorClass: { type: String, default: 'border-zinc-200' },
   // 字体加粗程度
-  bold: { type: Boolean, default: true }
+  bold: { type: Boolean, default: false }
 })
 </script>
 

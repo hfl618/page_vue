@@ -1,27 +1,37 @@
 <script setup>
+import { onMounted } from 'vue'
+import { useKnowledge } from './hooks/useKnowledge'
+
 /**
- * @description 知识库主列表页面 (模块化版)
- * 业务逻辑由 hooks/useKnowledge.js 提供
- * UI 拆分为 components/ 下的多个私有子组件
+ * @description 知识库主列表页面
  */
+console.info('[View] KnowledgeList loading...')
+
 const {
   viewMode, currentStack, showDirectory, dirSearch, currentPage, itemsPerPage,
-  isStackOwner, filteredArticles, paginatedItems, totalPages, visiblePages, indexItems,
+  filteredArticles, paginatedItems, totalPages, visiblePages, indexItems,
   processingIds, selectedIds, 
-  init, goToPage, openStack, toggleSelection, clearSelection, handleBatchDelete, handleBatchMerge,
-  handleDeleteArticle, handleTogglePrivacy, userStore, router
-} = useKnowledgeList()
+  init, openStack, toggleSelection, toggleAll, clearSelection, 
+  handleDeleteArticle, handleTogglePrivacy, userStore
+} = useKnowledge()
 
-// 生命周期初始化
-onMounted(() => init())
+const handleIndexItemClick = (item) => {
+  if (item.is_collection) openStack(item)
+  else window.location.href = `/knowledge/read/${item.id}`
+}
+
+onMounted(() => {
+  console.log('[View] onMounted triggered')
+  init()
+})
 </script>
 
 <template>
   <div class="h-full flex flex-col relative bg-[#fafafa]" translate="no">
-    <div class="flex-1 overflow-y-auto p-10 custom-scrollbar pb-32">
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar pb-32">
       <div class="max-w-[1600px] mx-auto">
         
-        <!-- 1. 头部区域 (模块化子组件) -->
+        <!-- 1. 头部区域 -->
         <KnowledgeHeader 
           v-model:view-mode="viewMode"
           v-model:current-stack="currentStack"
@@ -31,6 +41,7 @@ onMounted(() => init())
 
         <!-- 2. 内容网格 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+          <!-- 创建按钮 -->
           <router-link 
             v-if="viewMode === 'personal' && !currentStack" 
             to="/knowledge/editor/new" 
@@ -58,15 +69,13 @@ onMounted(() => init())
       </div>
     </div>
 
-    <!-- 3. 批量操作悬浮条 (模块化子组件) -->
+    <!-- 3. 批量操作条 -->
     <BatchActionBar 
       :count="selectedIds.size"
-      @merge="handleBatchMerge"
-      @delete="handleBatchDelete"
       @cancel="clearSelection"
     />
 
-    <!-- 4. 索引列表弹窗 (模块化子组件) -->
+    <!-- 4. 索引弹窗 -->
     <KnowledgeIndexModal 
       :show="showDirectory"
       v-model:dir-search="dirSearch"
@@ -80,7 +89,7 @@ onMounted(() => init())
       :selected-ids="selectedIds"
       @close="showDirectory = false"
       @click-item="handleIndexItemClick"
-      @go-page="goToPage"
+      @go-page="(p) => currentPage = p"
       @toggle-selection="toggleSelection"
       @toggle-all="toggleAll"
     />
