@@ -23,6 +23,7 @@ export default defineConfig({
         './src/composables/**',
         './src/views/**/hooks/**',
         './src/components/**/hooks/**',
+        './src/store/**',
       ],
       dts: false,
     }),

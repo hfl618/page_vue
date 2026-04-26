@@ -4,8 +4,13 @@
 
 export function useHeader(emit) {
   const router = useRouter()
+  const route = useRoute()
   const searchQuery = ref('')
   let debounceTimer = null
+
+  // 自动计算标题
+  const parentLabel = computed(() => route.meta.parent || '')
+  const currentLabel = computed(() => route.meta.title || 'CORE')
 
   /**
    * @description 统一的返回逻辑
@@ -32,17 +37,6 @@ export function useHeader(emit) {
     searchQuery,
     parentLabel,
     currentLabel,
-    goBack,
-    handleSearch
-  }
-}
-tTimeout(() => {
-      emit('search', searchQuery.value)
-    }, 300)
-  }
-
-  return {
-    searchQuery,
     goBack,
     handleSearch
   }
