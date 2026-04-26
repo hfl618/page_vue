@@ -5,7 +5,7 @@ import { storage } from '@/utils/storage'
 
 const service = axios.create({
   baseURL: '/api',
-  timeout: 60000,
+  timeout: 15000, // 缩短至 15s
   withCredentials: true
 })
 
@@ -55,13 +55,16 @@ service.interceptors.response.use(
     const uiStore = useUiStore()
     uiStore.hideLoading()
 
-    let message = 'Connection Interrupted.'
-    if (error.code === 'ECONNABORTED') message = 'Protocol timeout. System busy.'
-    if (error.response) {
+    let message = 'Connection failed.'
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      message = 'NETWORK_TIMEOUT: System core is not responding.'
+    } else if (error.response) {
       switch (error.response.status) {
         case 401: message = 'Authentication required.'; break
         case 403: message = 'Access protocol denied.'; break
+        case 404: message = 'Registry path not found.'; break
         case 500: message = 'System core failure.'; break
+        default: message = `PROTOCOL_ERR_${error.response.status}`; break
       }
     }
 

@@ -1,31 +1,27 @@
 # 2604262210-Arch-MajorRefactor-Summary (架构大重构总结)
 
 ## 1. 概括说明
-本次更新完成了全站的工业化重构，核心目标是实现“单人高效维护”与“0 代码冗余”。通过逻辑抽离和自动化工具，将原本臃肿的页面精简了 60% 以上，并修复了因自动导入配置不全导致的运行时错误。
+本次更新完成了全站的工业化重构，核心目标是实现“单人高效维护”与“0 代码冗余”。通过逻辑抽离和自动化工具，将原本臃肿的页面精简了 60% 以上，并修复了因自动导入配置不全及后端连接超时导致的运行时问题。
 
 ## 2. 核心架构变更
-- **自动化集成 (unplugin-auto-import)**:
-  - **Hooks & Stores 自动扫描**: 全站 `src/**/hooks` 和 `src/store/**` 目录下的导出函数均可直接使用，无需 Import。
-  - **组件自动导入**: `src/components` 和 `src/layouts` 下的组件均可直接在模板使用（支持深层扫描）。
-- **逻辑视图分离**: 建立了完整的 `hooks/` 体系。
-  - 每个功能模块（Auth, Knowledge, User, Tools）均有对应的 Hook 处理数据流。
-- **组件分类管理**:
-  - `src/components/common/base/`: 原子级 UI 元素 (Input, Button, Switch, FileUpload)。
-  - `src/components/common/feedback/`: 全局反馈 (Loading, Notification, IndustrialIndicator)。
-  - `src/components/common/cards/`: 业务展示卡片 (ArticleCard, ToolCard)。
-- **状态管理升级**:
-  - 全量升级 Pinia 为 **Setup Store** 风格，提升逻辑复用性与可读性。
+- **解耦逻辑 (Hooks & Stores)**: 
+  - 全量升级 Pinia 为 **Setup Store** 风格。
+  - 为所有业务模块（Auth, Knowledge, User, Tools）建立了专门的 `hooks`。
+  - **加固**: 为所有 Hook 和 Store 文件添加了显式 Import，消除了 Vite 500 编译错误。
+- **原子组件体系**:
+  - `src/components/common/base/`: 包含 `BaseInput`, `BaseButton`, `BaseTitle`, `BaseTag`, `BaseIconButton` 等。
+  - **高度弹性**: 支持通过 `props` 自定义颜色，通过 `class` 自定义尺寸。
+  - **交互规范**: 全站统一的下划线激活（BaseActionLink）与物理点击位移。
+- **导航自动化**: 顶栏标题与返回路径完全由 `router/index.js` 的 `meta` 字段驱动。
 
-## 3. 组件使用指南 (高度自定义)
-所有的 `Base` 组件均支持透传 Tailwind 类名。
-- **自定义宽度示例**: `<BaseInput class="w-64" />` 或 `<BaseButton class="w-auto px-12">`。
-- **受控模式**: 统一使用 `v-model` 进行双向绑定。
+## 3. 健壮性优化
+- **网络请求**:
+  - 默认超时时间缩短至 **15s**，并增加了专项的 `NETWORK_TIMEOUT` 错误拦截与提示。
+  - 完善了 Loading 层的生命周期闭环，确保在任何异常下均能正常关闭。
+- **分页增强**:
+  - `KnowledgeList` 支持实时调节页面密度（Items Per Page），并具备页码自动重置逻辑。
 
-## 4. 故障修复记录
-- **修复**: 解决了 `useUserSettings`, `useHeader`, `useUiStore` 等的 `ReferenceError`。
-- **原因**: Vite 自动导入扫描路径未包含自定义 Hooks 和 Stores 目录。
-- **对策**: 补全了 `vite.config.js` 中的 `dirs` 配置，涵盖了所有逻辑存放路径。
-
-## 5. 后续维护
-- 只有发生**重大架构变动**或**新功能模块上线**时才更新此文件夹下的 MD。
-- 所有的细节变更应体现在代码注释（JSDoc）中。
+## 4. 后续维护
+- **新功能开发**: 遵循 `Hook -> View -> Base Component` 的三层架构。
+- **样式定制**: 优先通过 `variables.css` 修改全局变量，或通过原子组件的 Props 进行局部定制。
+- **故障排查**: 若出现 `ReferenceError`，请优先检查是否漏掉了显式 Import。

@@ -1,4 +1,7 @@
 <script setup>
+import { ref } from 'vue'
+import { useRoute } from 'vue-router'
+
 /**
  * @description 主布局组件
  * 采用逻辑解耦模式，利用自动导入消除冗余。

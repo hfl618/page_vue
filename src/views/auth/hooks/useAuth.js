@@ -1,7 +1,12 @@
+import { ref, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUiStore } from '@/store/ui'
+import { useUserStore } from '@/store/user'
+import { login, signup, checkUsername } from '@/api/modules/auth'
+
 /**
  * @description 身份认证业务逻辑抽离 (登录/注册)
  */
-
 export function useAuth() {
   const router = useRouter()
   const uiStore = useUiStore()
@@ -75,7 +80,7 @@ export function useAuth() {
       await userStore.fetchProfile()
       router.push('/')
     } catch (err) {
-      // 错误已由 request.js 拦截处理，此处可进行额外 UI 处理
+      // 错误已处理
     } finally {
       loading.value = false
     }
@@ -105,6 +110,9 @@ export function useAuth() {
   return {
     form,
     loading,
+    userStatus,
+    isPasswordVisible,
+    togglePassword,
     handleLogin,
     handleSignup
   }

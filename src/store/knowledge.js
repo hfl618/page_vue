@@ -1,3 +1,4 @@
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { fetchPublicArticles } from '@/api/modules/knowledge'
 
@@ -42,12 +43,14 @@ export const useKnowledgeStore = defineStore('knowledge', () => {
       return articles.value
     } catch (err) {
       console.error('Knowledge Sync Failed:', err)
+      // 关键修复：即使失败也要保证 isLoaded 逻辑闭环，或标记为失败
+      isLoaded.value = false 
       throw err
     }
   }
 
   /**
-   * @description 更新单条数据 (全站即时同步)
+   * @description 更新单条数据
    */
   const updateSingleArticle = (newArticle) => {
     const idx = articles.value.findIndex(a => a.id === newArticle.id)

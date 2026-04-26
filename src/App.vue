@@ -1,4 +1,7 @@
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
 /**
  * @description 核心入口框架
  * 采用自动化布局切换机制，内容由 meta.layout 决定。

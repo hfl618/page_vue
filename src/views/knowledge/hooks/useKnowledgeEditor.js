@@ -1,7 +1,11 @@
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useUiStore } from '@/store/ui'
+import request from '@/api/request'
+
 /**
  * @description 知识库编辑器核心业务逻辑
  */
-
 export function useKnowledgeEditor() {
   const route = useRoute()
   const router = useRouter()

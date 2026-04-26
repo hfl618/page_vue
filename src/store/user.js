@@ -1,4 +1,6 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
+import { fetchMe } from '@/api/modules/user'
 import { storage } from '@/utils/storage'
 import { STORAGE_KEYS } from '@/constants'
 

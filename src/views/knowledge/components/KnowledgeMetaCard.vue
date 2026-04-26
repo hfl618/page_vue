@@ -41,12 +41,12 @@ defineProps({
         </div>
         
         <div class="mt-4">
-          <router-link 
+          <BaseActionLink 
             :to="`/knowledge/editor/${article.id}`" 
-            class="block w-full text-center font-black text-zinc-900 border-b-2 border-zinc-100 hover:border-zinc-900 transition-all uppercase px-0.5 pb-0.5 text-[10px]"
+            block
           >
             Edit Module
-          </router-link>
+          </BaseActionLink>
         </div>
       </div>
     </div>

@@ -1,7 +1,10 @@
+import { ref } from 'vue'
+import { useUserStore } from '@/store/user'
+import { fetchMe } from '@/api/modules/user'
+
 /**
  * @description 用户个人资料页业务逻辑
  */
-
 export function useUserProfile() {
   const userStore = useUserStore()
   const profile = ref(null)

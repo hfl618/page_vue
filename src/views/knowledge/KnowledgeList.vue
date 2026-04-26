@@ -4,10 +4,21 @@
  * 采用逻辑解耦模式，所有业务逻辑见 hooks/useKnowledge.js
  */
 const {
-  viewMode, currentStack, showDirectory, dirSearch, currentPage,
-  isStackOwner, filteredArticles, paginatedItems, totalPages, visiblePages,
+  viewMode, currentStack, showDirectory, dirSearch, currentPage, itemsPerPage,
+  isStackOwner, filteredArticles, paginatedItems, totalPages, visiblePages, indexItems,
+  processingIds, handleDeleteArticle,
   init, goToPage, openStack, userStore, router
 } = useKnowledgeList()
+
+// 处理索引列表项点击
+const handleIndexItemClick = (item) => {
+  showDirectory.value = false
+  if (item.is_collection) {
+    openStack(item)
+  } else {
+    router.push('/knowledge/read/' + item.id)
+  }
+}
 
 // 生命周期初始化
 onMounted(() => init())
@@ -42,28 +53,43 @@ onMounted(() => init())
           </div>
         </div>
 
-        <!-- 列表网格 -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+          <!-- 新建条目占位卡片 -->
+          <router-link 
+            v-if="viewMode === 'personal' && !currentStack" 
+            to="/knowledge/editor/new" 
+            class="tool-paper-card p-5 flex flex-col items-center justify-center text-center hover:bg-white transition-all group border-dashed border-zinc-300"
+          >
+            <div class="w-8 h-8 border border-zinc-200 flex items-center justify-center text-zinc-300 group-hover:text-zinc-900 group-hover:border-zinc-900 mb-2 transition-colors">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M12 4.5v16m7.5-8h-16"/></svg>
+            </div>
+            <span class="text-[9px] font-bold text-zinc-400 group-hover:text-zinc-900 uppercase tracking-widest transition-colors">Create Entry</span>
+          </router-link>
+
           <ArticleCard 
             v-for="article in filteredArticles" 
             :key="article.id" 
             :article="{...article, is_owner: userStore.currentUser?.id && String(article.user_id) === String(userStore.currentUser.id)}"
             :view-mode="viewMode" :current-stack="currentStack"
+            :processing-ids="processingIds"
             @open-stack="openStack"
+            @delete="handleDeleteArticle"
           />
         </div>
       </div>
     </div>
 
     <!-- 索引列表弹窗 -->
-    <div v-if="showDirectory" class="fixed inset-0 z-[1000] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-6">
+    <div v-if="showDirectory" @click="showDirectory = false" class="fixed inset-0 z-[1000] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-6">
         <div @click.stop class="w-full max-w-5xl bg-white border border-zinc-900 shadow-[8px_8px_0px_#18181b] flex flex-col max-h-[85vh]">
             <div class="p-8 border-b border-zinc-100 flex items-center justify-between gap-10">
                 <div class="flex-1 relative text-left">
                     <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none"><svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
                     <input type="text" v-model="dirSearch" placeholder="SEARCH IN STACK..." class="w-full bg-zinc-50 border border-zinc-100 pl-12 pr-4 py-3 text-[11px] font-black uppercase outline-none focus:border-zinc-900 transition-all">
                 </div>
-                <button @click="showDirectory = false" class="text-[10px] font-black uppercase tracking-widest border-b-2 border-zinc-900 pb-0.5 hover:text-zinc-500 transition-all">CLOSE INDEX</button>
+                <BaseActionLink @click="showDirectory = false">
+                  CLOSE INDEX
+                </BaseActionLink>
             </div>
             <div class="flex-1 overflow-y-auto custom-scrollbar">
                 <table class="w-full text-left border-collapse">
@@ -77,28 +103,47 @@ onMounted(() => init())
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-zinc-50">
-                        <tr v-for="(item, index) in paginatedItems" :key="item.id" class="group transition-all cursor-pointer hover:bg-zinc-50/50" @click="showDirectory = false; router.push('/knowledge/read/' + item.id)">
-                            <td class="py-4 px-8 text-[10px] font-mono font-bold text-zinc-300">{{ String((currentPage - 1) * 10 + index + 1).padStart(3, '0') }}</td>
+                        <tr v-for="(item, index) in paginatedItems" :key="item.id" class="group transition-all cursor-pointer hover:bg-zinc-50/50" @click="handleIndexItemClick(item)">
+                            <td class="py-4 px-8 text-[10px] font-mono font-bold text-zinc-300">{{ String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0') }}</td>
                             <td class="py-4 px-8">
                                 <div class="flex items-center gap-2">
-                                    <span v-if="currentStack && item.id === currentStack.id" class="bg-zinc-900 text-white text-[7px] px-1 font-black shrink-0">CORE</span>
+                                    <span v-if="item.is_collection" class="bg-zinc-900 text-white text-[7px] px-1 font-black shrink-0">STACK</span>
                                     <div class="text-[11px] font-black text-zinc-900 uppercase group-hover:translate-x-1 transition-transform truncate">{{ item.collection_title || item.title }}</div>
                                 </div>
                             </td>
                             <td class="py-4 px-8"><div class="text-[9px] text-zinc-400 font-bold italic line-clamp-2 leading-relaxed">{{ item.excerpt || 'No summary.' }}</div></td>
                             <td class="py-4 px-8">
                                 <div class="flex flex-wrap gap-1">
-                                    <span v-for="tag in (item.tags ? String(item.tags).split(',') : [])" :key="tag" class="text-[8px] font-black px-1.5 py-0.5 border border-zinc-100 text-zinc-400 uppercase">{{ tag.trim() }}</span>
+                                    <BaseTag v-for="tag in (item.tags ? String(item.tags).split(',') : [])" :key="tag">
+                                      {{ tag.trim() }}
+                                    </BaseTag>
                                 </div>
                             </td>
-                            <td class="py-4 px-8 text-right"><router-link :to="'/knowledge/read/' + item.id" class="text-[9px] font-black text-zinc-900 border-b border-zinc-900 uppercase hover:text-zinc-500 transition-all">Open</router-link></td>
+                            <td class="py-4 px-8 text-right">
+                              <BaseActionLink>
+                                {{ item.is_collection ? 'Open Stack' : 'Open Module' }}
+                              </BaseActionLink>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <!-- 分页 -->
             <div class="p-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between px-8">
-                <div class="flex items-center gap-6"><span class="text-[8px] font-black text-zinc-400 uppercase">Total Count: {{ paginatedItems.length }}</span></div>
+                <div class="flex items-center gap-8">
+                    <span class="text-[8px] font-black text-zinc-400 uppercase">Total Count: {{ indexItems.length }}</span>
+                    <!-- 页面密度调节 -->
+                    <div class="flex items-center gap-2">
+                        <span class="text-[8px] font-black text-zinc-400 uppercase">Density:</span>
+                        <input 
+                            v-model.number="itemsPerPage" 
+                            type="number" 
+                            class="w-10 bg-white border border-zinc-200 text-[9px] font-mono font-bold text-center py-0.5 outline-none focus:border-zinc-900 transition-all"
+                            min="1"
+                            max="100"
+                        >
+                    </div>
+                </div>
                 <div class="flex items-center gap-2">
                     <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="px-2 py-1 border border-zinc-200 text-[9px] font-black uppercase disabled:opacity-30 hover:bg-zinc-900 hover:text-white transition-all">Prev</button>
                     <div class="flex items-center gap-1">
@@ -113,6 +158,7 @@ onMounted(() => init())
 </template>
 
 <style scoped>
+.tool-paper-card { background: #ffffff; border: 1px solid #e4e4e7; height: 250px; box-shadow: 2px 2px 0px #f4f4f5; }
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; }

@@ -1,4 +1,7 @@
 <script setup>
+import { ref } from 'vue'
+import { useHeader } from './hooks/useHeader'
+
 /**
  * @description 全局统一顶栏组件 (自动化版本)
  * 标题与返回逻辑自动从路由元数据获取，无需 Props。

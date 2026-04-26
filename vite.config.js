@@ -16,6 +16,7 @@ export default defineConfig({
           '@/api/modules/auth': ['login', 'signup', 'logout', 'checkUsername'],
           '@/api/modules/knowledge': ['fetchUserArticles', 'fetchPublicArticles', 'fetchArticleDetail'],
           '@/api/modules/user': ['fetchMe', 'updateProfile'],
+          '@/api/request': [['default', 'request']],
         }
       ],
       // 关键修复：自动扫描这些目录下的所有导出
@@ -24,6 +25,7 @@ export default defineConfig({
         './src/views/**/hooks/**',
         './src/components/**/hooks/**',
         './src/store/**',
+        './src/constants/**',
       ],
       dts: false,
     }),

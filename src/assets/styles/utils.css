@@ -8,8 +8,12 @@
   100% { transform: rotate(360deg) scale(1); border-radius: 0; }
 }
 
-.animate-square-morph {
+.heflos-loader-square {
   animation: square-morph 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-square-morph {
+  @apply heflos-loader-square;
 }
 
 /* -------------------------------------------------------------------------- */

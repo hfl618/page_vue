@@ -1,7 +1,9 @@
+import { ref } from 'vue'
+import { useUiStore } from '@/store/ui'
+
 /**
  * @description 系统反馈页业务逻辑
  */
-
 export function useFeedback() {
   const uiStore = useUiStore()
   const feedbackText = ref('')

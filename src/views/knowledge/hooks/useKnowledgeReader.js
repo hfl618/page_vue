@@ -1,7 +1,11 @@
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useUiStore } from '@/store/ui'
+import { fetchArticleDetail } from '@/api/modules/knowledge'
+
 /**
  * @description 知识库阅读器业务逻辑
  */
-
 export function useKnowledgeReader() {
   const route = useRoute()
   const uiStore = useUiStore()
@@ -28,15 +32,30 @@ export function useKnowledgeReader() {
    * @description 获取文章详情
    */
   const fetchDetail = async () => {
+    const id = route.params.id
+    if (!id) {
+      uiStore.addNotice({ title: 'PARAM_ERROR', message: 'Invalid article sequence.', type: 'error' })
+      return
+    }
+
     uiStore.showLoading('SYNCHRONIZING', 'Accessing Registry...')
     try {
-      const data = await fetchArticleDetail(route.params.id)
-      article.value = data
-      wordCount.value = calculateWords(data.content)
+      const data = await fetchArticleDetail(id)
+      if (data) {
+        article.value = data
+        wordCount.value = calculateWords(data.content)
+      } else {
+        throw new Error('Null sequence received.')
+      }
     } catch (e) {
       console.error('Fetch Detail Error:', e)
+      uiStore.addNotice({ 
+        title: 'SYNC_TIMEOUT', 
+        message: 'Backend node not responding. Please check server status.', 
+        type: 'error' 
+      })
     } finally {
-      // 预览初始化逻辑留给组件处理
+      uiStore.hideLoading()
     }
   }
 
@@ -49,7 +68,6 @@ export function useKnowledgeReader() {
     outline.value = Array.from(headings).map(h => ({
       text: h.innerText.replace(/^#+\s/, ''),
       level: h.tagName.toLowerCase(),
-      id: h.id || '',
       el: h
     }))
   }

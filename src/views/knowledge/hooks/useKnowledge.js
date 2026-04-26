@@ -1,7 +1,13 @@
+import { ref, computed, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
+import { useKnowledgeStore } from '@/store/knowledge'
+import { useUserStore } from '@/store/user'
+import { useUiStore } from '@/store/ui'
+import request from '@/api/request'
+
 /**
  * @description 知识库列表业务逻辑抽离
  */
-
 export function useKnowledgeList() {
   const router = useRouter()
   const knowledgeStore = useKnowledgeStore()
@@ -15,14 +21,49 @@ export function useKnowledgeList() {
   const dirSearch = ref('')
   const currentPage = ref(1)
   const itemsPerPage = ref(10)
+  
+  // 追踪正在执行异步操作的 ID (格式: 'id-action')
+  const processingIds = ref(new Set())
+
+  // 监听每页条数变化，重置页码
+  watch(itemsPerPage, () => {
+    currentPage.value = 1
+  })
+
+  /**
+   * @description 处理删除协议
+   */
+  const handleDeleteArticle = async (article) => {
+    const actionKey = `${article.id}-delete`
+    processingIds.value.add(actionKey)
+    
+    try {
+      // 模拟后端处理
+      await new Promise(resolve => setTimeout(resolve, 1200))
+      uiStore.addNotice({ title: 'REGISTRY_PURGED', message: `Entry [${article.title}] removed.`, type: 'success' })
+      await knowledgeStore.syncArticles(true)
+    } catch (e) {
+      console.error('Purge Failed', e)
+    } finally {
+      processingIds.value.delete(actionKey)
+    }
+  }
 
   // 初始化加载
   const init = async () => {
     try {
-      const syncTask = knowledgeStore.syncArticles(true)
-      const profileTask = userStore.fetchProfile().catch(() => null)
+      const syncTask = knowledgeStore.syncArticles(true).catch(e => {
+        console.warn('Sync Articles Failed:', e)
+        return []
+      })
+      const profileTask = userStore.fetchProfile().catch(e => {
+        console.warn('Fetch Profile Failed:', e)
+        return null
+      })
       await Promise.allSettled([syncTask, profileTask])
       await nextTick()
+    } catch (e) {
+      console.error('Core Initialization Error:', e)
     } finally {
       setTimeout(() => uiStore.hideLoading(), 500)
     }
@@ -85,14 +126,17 @@ export function useKnowledgeList() {
     itemsPerPage,
     isStackOwner,
     filteredArticles,
+    indexItems,
     paginatedItems,
     totalPages,
     visiblePages,
+    processingIds,
+    handleDeleteArticle,
     init,
     goToPage,
     openStack,
     unstack,
-    userStore, // 暴露给模板使用
+    userStore,
     router
   }
 }
