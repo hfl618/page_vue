@@ -1,11 +1,19 @@
-import request from '../request'
-
 /**
- * 用户模块 API
+ * @module User
+ * @description 用户信息与个人设置模块
  */
 
-// 获取当前登录用户详情
+import request from '@/api/request'
+
+/**
+ * @description 获取当前登录用户的详细个人档案
+ * @returns {Promise<Object>} 用户资料对象
+ */
 export const fetchMe = () => request.get('/v1/user/me')
 
-// 示例：以后可以扩展更新资料接口
+/**
+ * @description 更新用户个人资料
+ * @param {Object} data 待更新的用户字段
+ * @returns {Promise}
+ */
 export const updateProfile = (data) => request.post('/v1/user/update', data)

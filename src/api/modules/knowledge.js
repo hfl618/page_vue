@@ -1,14 +1,25 @@
-import request from '../request'
-
 /**
- * 知识库模块 API
+ * @module Knowledge
+ * @description 知识库与内容管理模块
  */
 
-// 获取当前用户的个人文章列表 (用于 Profile 页)
+import request from '@/api/request'
+
+/**
+ * @description 获取当前登录用户的个人文章列表
+ * @returns {Promise<Array>} 文章对象数组
+ */
 export const fetchUserArticles = () => request.get('/v1/user/articles')
 
-// 获取公共探索列表 (用于 Knowledge 主页)
+/**
+ * @description 获取全站公共探索文章列表
+ * @returns {Promise<Array>}
+ */
 export const fetchPublicArticles = () => request.get('/v1/knowledge/list')
 
-// 获取单篇文章详情
+/**
+ * @description 根据 ID 获取单篇文章详情
+ * @param {string|number} id 文章唯一标识
+ * @returns {Promise<Object>} 文章详情数据
+ */
 export const fetchArticleDetail = (id) => request.get(`/v1/knowledge/read/${id}`)

@@ -1,53 +1,42 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { EDITOR_CONFIG } from '@/constants'
 
 /**
- * VditorEditor 工业封装版：
- * 1. 独立生命周期：负责 script 动态加载与销毁。
- * 2. 指令中心：父组件可通过 expose 的方法触发 加粗、代码等指令。
- * 3. 大纲广播：内容变动时自动提取 headings 并发送事件。
+ * @description 工业级 Vditor 封装组件
  */
-
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  placeholder: { type: String, default: 'Enter content...' }
+  placeholder: { type: String, default: 'Protocol sequence pending...' }
 })
 
-const emit = defineEmits(['update:modelValue', 'outline-change'])
+const emit = defineEmits(['update:modelValue'])
 const vditorInstance = ref(null)
 
-// 暴露给父组件的方法
-const triggerAction = (type) => {
-  const btn = document.querySelector(`.vditor-toolbar button[data-type="${type}"]`) || 
-              document.querySelector(`.vditor-toolbar__item button[data-type="${type}"]`)
-  if (btn) btn.click()
-}
-
-defineExpose({ triggerAction })
+// 监听外部 modelValue 变化（仅在实例存在且内容不一致时更新）
+watch(() => props.modelValue, (newVal) => {
+  if (vditorInstance.value && newVal !== vditorInstance.value.getValue()) {
+    vditorInstance.value.setValue(newVal)
+  }
+})
 
 onMounted(() => {
-  vditorInstance.value = new window.Vditor('vditor-target', {
+  vditorInstance.value = new window.Vditor('vditor-mount', {
+    height: '100%',
     mode: 'ir',
-    height: 'auto',
-    minHeight: 600,
-    placeholder: props.placeholder,
     value: props.modelValue,
+    placeholder: props.placeholder,
+    theme: EDITOR_CONFIG.DEFAULT_THEME,
+    cdn: EDITOR_CONFIG.VDITOR_CDN,
     cache: { enable: false },
-    after: () => {
-      const tb = document.querySelector('.vditor-toolbar')
-      if (tb) tb.style.display = 'none'
+    counter: { enable: true },
+    input: (val) => {
+      emit('update:modelValue', val)
     },
-    input: (v) => {
-      emit('update:modelValue', v)
-      
-      // 提取大纲并广播
-      const headings = document.querySelectorAll('.vditor-ir h1, .vditor-ir h2, .vditor-ir h3')
-      const outline = Array.from(headings).map(h => ({
-        text: h.innerText.replace(/^#+\s/, ''),
-        level: h.tagName.toLowerCase(),
-        el: h
-      }))
-      emit('outline-change', outline)
+    upload: {
+      url: EDITOR_CONFIG.UPLOAD_URL,
+      linkToImgUrl: EDITOR_CONFIG.UPLOAD_URL,
+      max: 10 * 1024 * 1024,
+      filename: (name) => name.replace(/[^(a-zA-Z0-9\.)]/g, '_')
     }
   })
 })
@@ -60,14 +49,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div id="vditor-target" class="w-full"></div>
+  <div id="vditor-mount" class="h-full"></div>
 </template>
 
 <style>
-/* 针对 Vditor 的 Reset 注入 */
+.vditor { border: none !important; }
+.vditor-toolbar { 
+  border-bottom: 1px solid #f4f4f5 !important; 
+  background: #fff !important; 
+  padding: 0 40px !important; 
+}
 .vditor-reset {
   font-family: 'Inter', system-ui, sans-serif !important;
   font-size: 16px !important;
-  line-height: var(--article-line-spacing, 1.8) !important;
 }
 </style>

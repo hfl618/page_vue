@@ -1,46 +1,59 @@
 import { defineStore } from 'pinia'
-import { fetchMe } from '@/api/modules/user'
+import { storage } from '@/utils/storage'
+import { STORAGE_KEYS } from '@/constants'
 
 /**
- * 用户全局状态管理
+ * @module UserStore
+ * @description 用户身份与全局权限状态
  */
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    currentUser: {
-      id: null,
-      username: '',
-      role: 'USER',
-      avatar: '',
-      bio: '',
-      stats: {
-        stars: 0,
-        articles: 0,
-        tools: 0
-      }
-    },
-    isLoggedIn: false
-  }),
-  actions: {
-    async fetchProfile() {
-      try {
-        const data = await fetchMe()
-        this.currentUser = data
-        this.isLoggedIn = true
-        return data
-      } catch (err) {
-        console.error('Failed to fetch user profile:', err)
-        this.isLoggedIn = false
-        throw err
-      }
-    },
-    setToken(token) {
-      localStorage.setItem('heflos_token', token)
-      this.isLoggedIn = true
-    },
-    logout() {
-      localStorage.removeItem('heflos_token')
-      this.currentUser = { id: null, username: '', stats: {} }
-      this.isLoggedIn = false
+export const useUserStore = defineStore('user', () => {
+  const currentUser = ref({
+    id: null,
+    username: '',
+    avatar: '',
+    bio: '',
+    role: 'USER'
+  })
+
+  const isLoggedIn = ref(!!storage.get(STORAGE_KEYS.TOKEN))
+
+  /**
+   * @description 同步用户信息
+   */
+  const fetchProfile = async () => {
+    try {
+      const data = await fetchMe()
+      currentUser.value = data
+      isLoggedIn.value = true
+      return data
+    } catch (err) {
+      isLoggedIn.value = false
+      throw err
     }
+  }
+
+  /**
+   * @description 登录状态设置
+   */
+  const setToken = (token) => {
+    storage.set(STORAGE_KEYS.TOKEN, token)
+    isLoggedIn.value = true
+  }
+
+  /**
+   * @description 退出并清理
+   */
+  const logout = () => {
+    storage.remove(STORAGE_KEYS.TOKEN)
+    currentUser.value = { id: null, username: '' }
+    isLoggedIn.value = false
+  }
+
+  return {
+    currentUser,
+    isLoggedIn,
+    fetchProfile,
+    setToken,
+    logout
   }
 })

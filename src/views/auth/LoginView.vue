@@ -1,51 +1,9 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import SocialAuth from './parts/SocialAuth.vue'
-import { login } from '@/api/modules/auth'
-import { useUserStore } from '@/store/user'
-
 /**
- * LoginView 联调版：
- * 1. 接入真实 API。
- * 2. 自动存储 Token 到 localStorage。
- * 3. 登录成功后跳转至 /discover。
+ * @description 登录页面
+ * 采用逻辑解耦模式，业务逻辑见 hooks/useAuth.js
  */
-
-const router = useRouter()
-const userStore = useUserStore()
-
-const username = ref('')
-const password = ref('')
-
-const handleLogin = async () => {
-  try {
-    const data = await login(username.value, password.value)
-    
-    // 关键修复：增加防御性判断，防止 code 404 等情况导致的代码崩溃
-    if (!data) {
-      console.warn('Protocol sync failed: No data returned.')
-      return
-    }
-
-    // 1. 存储 Token
-    if (data.token) {
-      localStorage.setItem('heflos_token', data.token)
-    }
-    
-    // 2. 同步到全局 Store
-    if (data.user) {
-      userStore.currentUser = { ...userStore.currentUser, ...data.user }
-    }
-    
-    // 3. 跳转
-    await router.push('/discover')
-    
-  } catch (err) {
-    console.error('Auth Protocol Rejected:', err)
-  }
-}
+const { form, loading, handleLogin } = useAuth()
 </script>
 
 <template>
@@ -61,7 +19,7 @@ const handleLogin = async () => {
       <p class="text-[14px] text-zinc-500 mt-1.5 font-medium">The hub for developer-first tools.</p>
     </div>
 
-    <!-- 社交登录 -->
+    <!-- 社交登录 (自动导入组件) -->
     <SocialAuth action-text="Continue" />
 
     <!-- 分隔线 -->
@@ -71,26 +29,32 @@ const handleLogin = async () => {
       <div class="flex-grow border-t border-zinc-100"></div>
     </div>
 
-    <!-- 表单 -->
+    <!-- 登录表单 -->
     <form @submit.prevent="handleLogin" class="flex flex-col gap-4 text-left px-2">
-      <div>
-        <input v-model="username" type="text" placeholder="Username" required 
-               class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-[14px] text-zinc-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all placeholder:text-zinc-300 font-bold bg-zinc-50/50">
-      </div>
+      <BaseInput 
+        v-model="form.username" 
+        placeholder="Username" 
+        required 
+      />
       
-      <div class="relative group">
-        <input v-model="password" type="password" placeholder="Password" required 
-               class="w-full border border-zinc-200 rounded-lg px-4 py-2.5 text-[14px] text-zinc-900 focus:border-black focus:ring-1 focus:ring-black outline-none transition-all placeholder:text-zinc-300 font-bold bg-zinc-50/50">
-        <div class="flex justify-end mt-2">
-          <router-link to="/forgot-password" class="text-[12px] font-black text-zinc-400 hover:text-zinc-900 transition-colors uppercase tracking-tighter">
-            Forgot password?
-          </router-link>
-        </div>
-      </div>
+      <BaseInput 
+        v-model="form.password" 
+        type="password" 
+        placeholder="Password" 
+        required
+      >
+        <template #suffix>
+          <div class="flex justify-end mt-2">
+            <router-link to="/forgot-password" class="text-[12px] font-black text-zinc-400 hover:text-zinc-900 transition-colors uppercase tracking-tighter">
+              Forgot password?
+            </router-link>
+          </div>
+        </template>
+      </BaseInput>
 
-      <button type="submit" class="w-full bg-zinc-900 text-white py-3 rounded-lg text-[13px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-[4px_4px_0px_#f4f4f5] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none mt-4">
+      <BaseButton type="submit" :loading="loading" class="mt-4">
         Establish Link
-      </button>
+      </BaseButton>
     </form>
 
     <!-- 页脚 -->

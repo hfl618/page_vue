@@ -1,9 +1,11 @@
 import axios from 'axios'
 import { useUiStore } from '@/store/ui'
+import { STORAGE_KEYS, RESPONSE_CODES } from '@/constants'
+import { storage } from '@/utils/storage'
 
 const service = axios.create({
   baseURL: '/api',
-  timeout: 60000, // 强制锁定 60s 超时
+  timeout: 60000,
   withCredentials: true
 })
 
@@ -13,7 +15,7 @@ service.interceptors.request.use(
     if (!config.hideLoading) {
       uiStore.showLoading('TRANSMITTING', 'Synchronizing with core...')
     }
-    const token = localStorage.getItem('heflos_token')
+    const token = storage.get(STORAGE_KEYS.TOKEN)
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     }
@@ -30,7 +32,7 @@ service.interceptors.response.use(
     const res = response.data
     const config = response.config
 
-    if (res.code !== 0 && res.code !== undefined) {
+    if (res.code !== RESPONSE_CODES.SUCCESS && res.code !== undefined) {
       uiStore.addNotice({
         title: 'PROTOCOL_ERROR',
         message: res.msg || 'Unknown failure.',

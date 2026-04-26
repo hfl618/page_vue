@@ -1,29 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useUserStore } from '@/store/user'
-import { useUiStore } from '@/store/ui'
-import request from '@/api/request'
-
-const userStore = useUserStore()
-const uiStore = useUiStore()
-const profile = ref(null)
-const loading = ref(true)
-
-const fetchProfile = async () => {
-  try {
-    const res = await request.get('/v1/user/profile')
-    profile.value = res
-  } catch (e) {
-    console.error('CRITICAL: User Profile establishing failed.')
-    // 降级处理：使用 store 中的基本信息
-    profile.value = userStore.currentUser
-  } finally {
-    loading.value = false
-  }
-}
+/**
+ * @description 用户个人资料详情组件
+ * 采用逻辑解耦模式，业务逻辑见 hooks/useUserProfile.js
+ */
+const { profile, loading, loadProfile } = useUserProfile()
 
 onMounted(() => {
-  fetchProfile()
+  loadProfile()
 })
 </script>
 
@@ -31,11 +14,11 @@ onMounted(() => {
   <div class="h-full flex flex-col bg-white border-r border-zinc-100" translate="no">
     <!-- 极致工业风个人资料卡 -->
     <div class="p-8 flex-1 overflow-y-auto custom-scrollbar">
-      <div v-if="profile" class="space-y-10">
+      <div v-if="!loading && profile" class="space-y-10">
         <!-- 头像与基本信息 -->
         <div class="flex flex-col items-center text-center">
-          <div class="w-24 h-24 bg-zinc-900 border border-zinc-900 p-1 mb-6 shadow-[8px_8px_0px_#f4f4f5]">
-            <img v-if="profile.avatar" :src="profile.avatar" class="w-full h-full object-cover grayscale">
+          <div class="w-24 h-24 bg-zinc-900 border border-zinc-900 p-1 mb-6 shadow-[8px_8px_0px_#f4f4f5] overflow-hidden">
+            <img v-if="profile.avatar" :src="profile.avatar" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
             <div v-else class="w-full h-full flex items-center justify-center text-white text-2xl font-black uppercase">
               {{ profile.username?.[0] }}
             </div>
@@ -76,7 +59,10 @@ onMounted(() => {
       <div v-else class="flex flex-col gap-6 animate-pulse">
         <div class="w-24 h-24 bg-zinc-100 mx-auto"></div>
         <div class="h-4 bg-zinc-100 w-1/2 mx-auto"></div>
-        <div class="h-20 bg-zinc-50 w-full"></div>
+        <div class="space-y-4">
+          <div class="h-2 w-16 bg-zinc-100"></div>
+          <div class="h-20 bg-zinc-50 w-full"></div>
+        </div>
       </div>
     </div>
   </div>

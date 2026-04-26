@@ -1,0 +1,71 @@
+/**
+ * @description 用户设置页面业务逻辑
+ */
+
+export function useUserSettings() {
+  const userStore = useUserStore()
+  const uiStore = useUiStore()
+  const { currentUser } = storeToRefs(userStore)
+
+  // 局部状态
+  const activeNav = ref('general')
+  const loading = ref(false)
+  
+  // 表单克隆副本，避免直接修改 Store 导致界面闪烁
+  const form = reactive({
+    username: currentUser.value.username,
+    bio: currentUser.value.bio,
+    location: currentUser.value.location,
+    website: currentUser.value.website,
+    publicProfile: true
+  })
+
+  /**
+   * @description 处理保存协议
+   */
+  const handleSave = async () => {
+    loading.value = true
+    try {
+      await updateProfile(form)
+      await userStore.fetchProfile() // 重新同步全局 Store
+      uiStore.addNotice({ title: 'SUCCESS', message: 'Registry protocol updated.', type: 'success' })
+    } catch (err) {
+      console.error('Update Failed:', err)
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * @description 头像上传
+   */
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+    if (file.size > 1024 * 1024) {
+      uiStore.addNotice({ title: 'LIMIT_EXCEEDED', message: 'MAX_LOAD: 1MB.', type: 'error' })
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('avatar', file)
+
+    uiStore.showLoading('UPLOADING', 'Transmitting identity data...')
+    try {
+      await request.post('/v1/user/avatar', formData)
+      await userStore.fetchProfile()
+      uiStore.addNotice({ title: 'SUCCESS', message: 'Avatar synchronized.', type: 'success' })
+    } finally {
+      uiStore.hideLoading()
+    }
+  }
+
+  return {
+    activeNav,
+    form,
+    loading,
+    currentUser,
+    handleSave,
+    handleAvatarUpload
+  }
+}

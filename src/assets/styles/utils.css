@@ -1,48 +1,43 @@
-/* 原子化复用样式类 */
+/* -------------------------------------------------------------------------- */
+/* INDUSTRIAL ANIMATIONS                                                      */
+/* -------------------------------------------------------------------------- */
 
-/* 字体复用 */
-.text-main { color: var(--text-main); font-size: 14px; }
-.text-bold { font-weight: 600; }
+@keyframes square-morph {
+  0% { transform: rotate(0deg) scale(1); border-radius: 0; }
+  50% { transform: rotate(180deg) scale(0.6); border-radius: 50%; }
+  100% { transform: rotate(360deg) scale(1); border-radius: 0; }
+}
+
+.animate-square-morph {
+  animation: square-morph 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* -------------------------------------------------------------------------- */
+/* CUSTOM SCROLLBAR                                                           */
+/* -------------------------------------------------------------------------- */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #18181b;
+}
+
+/* -------------------------------------------------------------------------- */
+/* ATOMIC UTILS                                                              */
+/* -------------------------------------------------------------------------- */
+
 .text-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* 线与边框复用 */
-.border-base {
-  border: 1px solid var(--border-color);
-}
-.border-dot {
-  border: 2px dashed var(--border-color);
-}
-.divider-h {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: 16px 0;
-}
-
-/* 点与状态指示 */
-.status-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 8px;
-  background-color: var(--text-placeholder);
-}
-.status-dot.is-success { background-color: var(--success-color); }
-.status-dot.is-error { background-color: var(--error-color); }
-.status-dot.is-warning { background-color: var(--warning-color); }
-
-/* 容器布局 */
 .flex-center {
   display: flex;
   justify-content: center;
-  align-items: center;
-}
-.flex-between {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
 }

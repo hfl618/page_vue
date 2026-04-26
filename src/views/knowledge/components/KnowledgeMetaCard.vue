@@ -1,0 +1,54 @@
+<script setup>
+/**
+ * @description 文章阅读器右侧作者信息卡片
+ */
+defineProps({
+  article: { type: Object, required: true }
+})
+</script>
+
+<template>
+  <aside class="w-[22rem] border-l border-zinc-100 flex flex-col h-full bg-white shrink-0 shadow-[-5px_0px_30px_rgba(0,0,0,0.02)]">
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
+      <div class="border border-zinc-900 bg-white p-6 shadow-[4px_4px_0px_#e4e4e7] relative group/card">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 border border-zinc-900 overflow-hidden bg-zinc-50">
+            <img :src="`https://api.dicebear.com/7.x/identicon/svg?seed=${article.author}`" class="w-full h-full grayscale">
+          </div>
+          <div class="flex flex-col text-left">
+            <span class="text-sm font-black text-zinc-900 uppercase tracking-tight">@{{ article.author }}</span>
+            <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Registry Contributor</span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-4 border-y border-zinc-100 py-4 items-center text-center">
+          <div class="border-r border-zinc-100">
+            <span class="block text-[13px] font-black font-mono">{{ article.views || 0 }}</span>
+            <span class="text-[7px] text-zinc-300 font-bold uppercase">Views</span>
+          </div>
+          <div class="border-r border-zinc-100">
+            <span class="block text-[13px] font-black font-mono">0</span>
+            <span class="text-[7px] text-zinc-300 font-bold uppercase">Votes</span>
+          </div>
+          <div class="border-r border-zinc-100">
+            <span class="block text-[13px] font-black font-mono">0</span>
+            <span class="text-[7px] text-zinc-300 font-bold uppercase">Replies</span>
+          </div>
+          <div>
+            <span class="block text-[13px] font-black font-mono text-amber-500">{{ article.stars || 0 }}</span>
+            <span class="text-[7px] text-amber-400 font-bold uppercase">Stars</span>
+          </div>
+        </div>
+        
+        <div class="mt-4">
+          <router-link 
+            :to="`/knowledge/editor/${article.id}`" 
+            class="block w-full text-center font-black text-zinc-900 border-b-2 border-zinc-100 hover:border-zinc-900 transition-all uppercase px-0.5 pb-0.5 text-[10px]"
+          >
+            Edit Module
+          </router-link>
+        </div>
+      </div>
+    </div>
+  </aside>
+</template>

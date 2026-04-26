@@ -1,9 +1,31 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    AutoImport({
+      imports: [
+        'vue',
+        'vue-router',
+        'pinia',
+        {
+          '@/api/modules/auth': ['login', 'signup', 'logout', 'checkUsername'],
+          '@/api/modules/knowledge': ['fetchUserArticles', 'fetchPublicArticles', 'fetchArticleDetail'],
+          '@/api/modules/user': ['fetchMe', 'updateProfile'],
+        }
+      ],
+      dts: false, // 如果以后切换到 TS，可以改为 true
+    }),
+    Components({
+      dirs: ['src/components', 'src/layouts'], // 自动导入组件和布局
+      extensions: ['vue'],
+      deep: true,
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
