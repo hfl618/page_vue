@@ -48,7 +48,7 @@ defineProps({
 <style scoped>
 /* 确保按钮在切换状态时，文字基线保持一致 */
 button, a {
-  min-height: 2.5rem; /* 设置保底最小高度，防止由于内容消失导致的塌陷 */
+  min-height: 2rem; /* 降低保底最小高度，允许更小的按钮尺寸 */
   box-sizing: border-box;
 }
 </style>

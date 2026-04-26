@@ -40,11 +40,12 @@ const emit = defineEmits(['toggle-fav'])
             <path stroke-linecap="round" stroke-linejoin="round" :d="iconPath" />
           </svg>
         </div>
-        <div class="flex-1 min-w-0 pr-10">
-          <BaseTitle level="h3" size="text-[13px]" class="line-clamp-1">
-            {{ name }}
-          </BaseTitle>
-          <span class="text-[8px] font-bold font-mono text-zinc-400 mt-1 inline-block opacity-60">{{ version }}</span>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="flex items-baseline gap-2 overflow-hidden">
+            <BaseTitle level="h3" size="text-[13px]" class="line-clamp-1 leading-none">
+              {{ name }}
+            </BaseTitle>
+          </div>
         </div>
       </div>
 
@@ -63,16 +64,19 @@ const emit = defineEmits(['toggle-fav'])
     <!-- 3. 底部元数据 -->
     <div class="mt-auto pt-3 border-t border-zinc-50 flex items-center justify-between group-hover:opacity-0 transition-opacity duration-200">
       <span class="text-[8px] font-black text-zinc-300 uppercase tracking-widest">DEPLOYED BY @{{ author }}</span>
-      <svg class="w-3 h-3 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      <div class="flex items-center gap-2">
+        <span class="text-[8px] font-bold font-mono text-zinc-200 uppercase tracking-tighter">{{ version }}</span>
+        <svg class="w-3 h-3 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+      </div>
     </div>
 
     <!-- 4. 原子化启动按钮 -->
     <div class="absolute inset-x-0 bottom-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-white z-20">
       <BaseButton 
         :href="url" 
-        class="!rounded-none !py-2.5 shadow-none active:translate-x-0 active:translate-y-0"
+        class="!rounded-none !h-7 shadow-none active:translate-x-0 active:translate-y-0"
       >
-        <span class="text-[10px] font-black uppercase tracking-[0.3em]">Launch Module</span>
+        <span class="text-[9px] font-black uppercase tracking-[0.3em]">Launch Module</span>
       </BaseButton>
     </div>
   </div>

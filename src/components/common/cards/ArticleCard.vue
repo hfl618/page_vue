@@ -31,14 +31,14 @@ const handleCardClick = (e) => {
 </script>
 
 <template>
-  <div class="tool-paper-card p-5 flex flex-col rounded-0 relative overflow-hidden text-left group cursor-pointer transition-all"
+  <div class="tool-paper-card p-4 flex flex-col rounded-0 relative overflow-hidden text-left group cursor-pointer transition-all"
        :class="containerClasses"
        @click="handleCardClick"
        translate="no">
     
     <!-- 选中态指示器 -->
-    <div v-if="selected" class="absolute left-2 top-2 z-40 bg-zinc-900 text-white p-0.5">
-      <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
+    <div v-if="selected" class="absolute left-1.5 top-1.5 z-40 bg-zinc-900 text-white p-0.5">
+      <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
     </div>
 
     <!-- 合集侧边黑条 (覆盖字体版) -->
@@ -47,7 +47,7 @@ const handleCardClick = (e) => {
     </div>
 
     <!-- 右上角：交互按钮区 -->
-    <div class="absolute top-3 right-3 flex items-center gap-1.5 z-30 opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0">
+    <div class="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-30 opacity-0 group-hover:opacity-100 transition-all translate-y-[-4px] group-hover:translate-y-0">
       <template v-if="viewMode === 'personal' && article.is_owner">
         <div class="flex items-center gap-1.5" @click.stop>
           <BaseIconButton 
@@ -86,29 +86,29 @@ const handleCardClick = (e) => {
     </div>
 
     <!-- 卡片主体内容 -->
-    <div class="mt-2 mb-3 flex items-center gap-3 pointer-events-none">
+    <div class="mt-1 mb-2 flex items-center gap-3 pointer-events-none">
       <span class="text-[8px] font-bold text-zinc-300 uppercase font-mono">{{ article.created_at?.substring(0, 10) }}</span>
     </div>
 
     <div class="flex-1 min-w-0 flex flex-col pointer-events-none">
         <template v-if="article.is_collection && !currentStack">
             <div class="flex-1 flex flex-col">
-                <div v-if="article.collection_image" class="w-full h-20 mb-3 border border-zinc-900 shadow-sm overflow-hidden">
+                <div v-if="article.collection_image" class="w-full h-16 mb-2 border border-zinc-900 shadow-sm overflow-hidden">
                     <img :src="article.collection_image" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500">
                 </div>
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 flex items-center justify-center border-2 border-zinc-900 shadow-[3px_3px_0px_#f4f4f5] shrink-0" :class="`bg-${article.collection_color || 'zinc'}-500`" >
-                        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 flex items-center justify-center border-2 border-zinc-900 shadow-[2px_2px_0px_#f4f4f5] shrink-0" :class="`bg-${article.collection_color || 'zinc'}-500`" >
+                        <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path v-if="article.collection_icon === 'code'" d="M10 20 l 4 -16 m 4 4 l 4 4 -4 4 M 6 16 l -4 -4 4 -4"/>
                             <path v-else-if="article.collection_icon === 'database'" d="M4 7 v 10 c 0 2.21 3.582 4 8 4 s 8 -1.79 8 -4 V 7 M 4 7 c 0 2.21 3.582 4 8 4 s 8 -1.79 8 -4 M 4 7 c 0 -2.21 3.582 -4 8 -4 s 8 1.79 8 4 m 0 5 c 0 2.21 -3.582 4 -8 4 s -8 -1.79 -8 -4"/>
                             <path v-else d="M19 11 H 5 m 14 0 a 2 2 0 0 1 2 2 v 6 a 2 2 0 0 1 -2 2 H 5 a 2 2 0 0 1 -2 -2 v -6 a 2 2 0 0 1 2 -2 m 14 0 V 9 a 2 2 0 0 0 -2 -2 M 5 11 V 9 a 2 2 0 0 1 2 -2 m 0 0 V 5 a 2 2 0 0 1 2 -2 h 6 a 2 2 0 0 1 2 2 v 2 M 7 7 h 10"/>
                         </svg>
                     </div>
-                    <BaseTitle level="h3" size="text-[18px]" class="truncate flex-1">
+                    <BaseTitle level="h3" size="text-[16px]" class="truncate flex-1">
                       {{ article.collection_title || article.title }}
                     </BaseTitle>
                 </div>
-                <p class="text-[11px] text-zinc-400 font-bold italic line-clamp-3 mb-4">{{ article.collection_desc || article.excerpt }}</p>
+                <p class="text-[10px] text-zinc-400 font-bold italic line-clamp-2 mb-2">{{ article.collection_desc || article.excerpt }}</p>
             </div>
         </template>
         <template v-else>
@@ -124,13 +124,13 @@ const handleCardClick = (e) => {
                         </BaseTag>
                     </div>
                 </div>
-                <p class="text-[11px] text-zinc-500 mt-3 line-clamp-2 leading-relaxed font-medium italic min-w-0">{{ article.excerpt || 'Accessing Registry Protocol...' }}</p>
+                <p class="text-[11px] text-zinc-500 mt-2 line-clamp-2 leading-relaxed font-medium italic min-w-0">{{ article.excerpt || 'Accessing Registry Protocol...' }}</p>
             </div>
         </template>
     </div>
 
     <!-- 底部动作条 -->
-    <div class="mt-2 pt-3 border-t border-zinc-100 flex justify-between items-center" @click.stop>
+    <div class="mt-1 pt-2 border-t border-zinc-100 flex justify-between items-center" @click.stop>
       <div class="flex items-center gap-2.5 text-zinc-400">
         <div class="flex items-center gap-1.5" title="Views">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path d="M15 12 a 3 3 0 1 1 -6 0 a 3 3 0 0 1 6 0 z M 2.458 12 C 3.732 7.943 7.523 5 12 5 c 3.478 0 6.522 1.756 8.542 4.542 a 2 2 0 0 1 0 2.916 C 18.522 17.244 15.478 19 12 19 c -4.477 0 -8.268 -2.943 -9.542 -7 z"/></svg>
