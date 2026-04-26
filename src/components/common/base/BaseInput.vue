@@ -1,8 +1,9 @@
 <script setup>
 /**
- * @description 基础输入框原子组件 (全自定义版)
+ * @description 基础输入框原子组件 (工业风重构版)
+ * 支持 standard (全边框) 和 underlined (仅下划线) 两种变体
  */
-defineProps({
+const props = defineProps({
   modelValue: [String, Number],
   type: { type: String, default: 'text' },
   placeholder: String,
@@ -10,16 +11,9 @@ defineProps({
   disabled: { type: Boolean, default: false },
   error: { type: String, default: '' },
   success: { type: Boolean, default: false },
+  variant: { type: String, default: 'standard' }, // standard, underlined
   
-  // 自定义背景
-  bgClass: { type: String, default: 'bg-zinc-50/30' },
-  // 自定义文字颜色
-  colorClass: { type: String, default: 'text-zinc-900' },
-  // 自定义边框颜色
-  borderColorClass: { type: String, default: 'border-zinc-200' },
-  // 自定义聚焦时的边框颜色
-  focusBorderClass: { type: String, default: 'focus:border-black' },
-  // 额外的 input class
+  // 允许外部覆盖核心样式
   inputClass: { type: String, default: '' }
 })
 
@@ -36,22 +30,33 @@ defineEmits(['update:modelValue'])
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        class="w-full border rounded-lg px-4 outline-none transition-all font-bold"
+        class="w-full outline-none transition-all font-black uppercase tracking-widest text-[11px] placeholder:text-zinc-300 placeholder:font-bold"
         :class="[
-          // 默认 py-2.5，如果外部传入了 py- 或 h- 则不应用
-          $attrs.class && ($attrs.class.includes('py-') || $attrs.class.includes('h-')) ? '' : 'py-2.5',
+          // 变体基础样式
+          variant === 'standard' ? 'border-2 border-zinc-100 bg-white px-4 py-2.5 focus:border-zinc-900' : 'border-b-2 border-zinc-100 bg-transparent px-0 py-2 focus:border-zinc-900',
           
-          error ? 'border-red-500 bg-red-50/30' : (success ? 'border-emerald-500 bg-emerald-50/30' : `${borderColorClass} ${bgClass} ${focusBorderClass}`),
+          // 状态颜色
+          error ? '!border-red-500 bg-red-50/30' : (success ? '!border-emerald-500 bg-emerald-50/30' : ''),
           
-          disabled ? 'opacity-50 cursor-not-allowed' : '',
-          colorClass,
+          disabled ? 'opacity-50 cursor-not-allowed' : 'text-zinc-900',
+          
           inputClass
         ]"
       >
       <slot name="suffix"></slot>
     </div>
-    <p v-if="error" class="mt-1 text-[9px] font-black text-red-500 uppercase tracking-tight pl-1">
+    <p v-if="error" class="mt-1 text-[8px] font-black text-red-500 uppercase tracking-tight pl-1">
       {{ error }}
     </p>
   </div>
 </template>
+
+<style scoped>
+/* 确保 Chrome 记住密码时的背景色不会破坏工业风 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+</style>

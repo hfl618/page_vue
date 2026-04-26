@@ -56,6 +56,18 @@ const routes = [
     name: 'settings', 
     component: () => import('../views/user/SettingsView.vue'), 
     meta: { layout: 'main', title: 'SETTINGS' } 
+  },
+  {
+    path: '/tools/publish',
+    name: 'tools-publish',
+    component: () => import('../views/tools/PublishView.vue'),
+    meta: { layout: 'main', title: 'DEPLOY', parent: 'DISCOVERY' }
+  },
+  {
+    path: '/feedback',
+    name: 'feedback',
+    component: () => import('../views/portal/FeedbackView.vue'),
+    meta: { layout: 'main', title: 'FEEDBACK', parent: 'DISCOVERY' }
   }
 ]
 
@@ -66,7 +78,8 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const uiStore = useUiStore()
-  if (to.path !== from.path) {
+  // 排除 /tools/publish 页面不显示全局加载遮罩
+  if (to.path !== from.path && to.path !== '/tools/publish') {
     uiStore.showLoading('SYNCHRONIZING', `Routing to ${to.meta.title || to.name}...`)
   }
   next()

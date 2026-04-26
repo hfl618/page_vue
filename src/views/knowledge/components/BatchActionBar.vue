@@ -10,7 +10,7 @@ defineEmits(['merge', 'delete', 'cancel'])
 
 <template>
   <Transition name="slide-up">
-    <div v-if="count > 0" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] flex items-center gap-8 bg-zinc-900 text-white px-6 py-2.5 shadow-[4px_4px_0px_rgba(0,0,0,0.1)] border border-white/10 backdrop-blur-md">
+    <div v-if="count > 1" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[2000] flex items-center gap-8 bg-zinc-900 text-white px-6 py-2.5 shadow-[4px_4px_0px_rgba(0,0,0,0.1)] border border-white/10 backdrop-blur-md">
         <div class="flex items-center gap-4 border-r border-white/20 pr-8">
             <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Selected Units</span>
             <span class="text-xl font-black font-mono">{{ count }}</span>

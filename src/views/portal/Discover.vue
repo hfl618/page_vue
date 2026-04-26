@@ -4,8 +4,8 @@
  * 逻辑解耦版：业务逻辑见 hooks/useDiscover.js
  */
 const { 
-  activeCategory, navCategories, showConfigModal, 
-  filteredTools, init, setCategory 
+  activeCategory, navCategories, showConfigModal, allPool, tempNav,
+  filteredTools, init, setCategory, toggleTempNav, applyNav
 } = useDiscover()
 
 onMounted(() => init())
@@ -14,11 +14,11 @@ onMounted(() => init())
 <template>
   <div class="h-full flex flex-col relative bg-[#fafafa]" translate="no">
     <!-- 主滚动容器 -->
-    <div class="flex-1 overflow-y-auto p-10 custom-scrollbar">
+    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
       <div class="max-w-[1600px] mx-auto">
         
         <!-- 头部：Utility Archive 标题区 -->
-        <div class="flex items-end justify-between mb-12 flex-wrap gap-10">
+        <div class="flex items-end justify-between mb-10 flex-wrap gap-10">
           <div class="max-w-xl text-left">
             <h1 class="text-[28px] font-bold text-zinc-900 tracking-tight uppercase leading-none">Utility Archive</h1>
             <p class="text-[11px] font-bold text-zinc-400 uppercase tracking-widest mt-3 italic">System Core & Community Deployments</p>
@@ -73,6 +73,39 @@ onMounted(() => init())
 
       </div>
     </div>
+
+    <!-- Registry Config 弹窗 -->
+    <Transition name="fade">
+      <div v-if="showConfigModal" class="fixed inset-0 z-[1000] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-6" @click="showConfigModal = false">
+        <div class="relative w-full max-w-xl bg-white border border-zinc-900 shadow-[8px_8px_0px_#f4f4f5] p-10 animate-in zoom-in-95" @click.stop>
+            <div class="flex items-center justify-between mb-10 text-left">
+                <h3 class="text-xl font-black text-zinc-900 uppercase tracking-widest">Registry Config</h3>
+                <button @click="showConfigModal = false" class="text-zinc-400 hover:text-zinc-900 transition-colors">
+                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 max-h-80 overflow-y-auto custom-scrollbar pr-4 pt-4">
+                <div class="px-4 py-2 border-2 border-zinc-900 bg-zinc-50 text-zinc-900 text-[10px] font-black uppercase opacity-50 cursor-not-allowed">All (Default)</div>
+                <button 
+                  v-for="item in allPool" 
+                  :key="item.id"
+                  @click="toggleTempNav(item.name)"
+                  class="px-4 py-2 border-2 text-[10px] font-black uppercase transition-all flex items-center gap-2"
+                  :class="tempNav.includes(item.name) ? 'border-zinc-900 text-zinc-900 bg-white shadow-[2px_2px_0px_#f4f4f5] -translate-y-0.5' : 'border-zinc-100 text-zinc-400 bg-white'"
+                >
+                  {{ item.name }}
+                </button>
+            </div>
+
+            <div class="mt-12 flex justify-center">
+                <button @click="applyNav" class="text-[11px] font-black text-zinc-900 border-b-2 border-zinc-900 hover:bg-zinc-900 hover:text-white transition-all px-6 py-1 tracking-widest uppercase">
+                  Apply & Sync
+                </button>
+            </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 

@@ -15,7 +15,7 @@ const { form, loading, handleLogin } = useAuth()
           <path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
         </svg>
       </div>
-      <h1 class="text-[24px] font-semibold text-zinc-900 leading-tight tracking-tight">Welcome to HeFlos</h1>
+      <h1 class="text-[24px] font-semibold text-zinc-900 leading-tight tracking-tight">Welcome to Heflos-Hub</h1>
       <p class="text-[14px] text-zinc-500 mt-1.5 font-medium">The hub for developer-first tools.</p>
     </div>
 

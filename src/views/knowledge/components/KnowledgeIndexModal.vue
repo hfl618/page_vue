@@ -64,18 +64,18 @@ defineEmits([
                           class="group transition-all cursor-pointer hover:bg-zinc-50/50"
                           :class="selectedIds.has(item.id) ? 'bg-zinc-50/80 shadow-[inset_4px_0px_0px_#18181b]' : ''"
                           @click="$emit('toggle-selection', item.id)">
-                          <td class="py-4 px-6 text-center" @click.stop>
-                            <input type="checkbox" :checked="selectedIds.has(item.id)" @change="$emit('toggle-selection', item.id)" class="accent-zinc-900 cursor-pointer">
+                          <td class="py-4 px-6 text-center" @click.stop="$emit('toggle-selection', item.id)">
+                            <input type="checkbox" :checked="selectedIds.has(item.id)" class="accent-zinc-900 cursor-pointer">
                           </td>
-                          <td class="py-4 px-4 text-[10px] font-mono font-bold text-zinc-300 pointer-events-none">{{ String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0') }}</td>
-                          <td class="py-4 px-8 pointer-events-none">
+                          <td class="py-4 px-4 text-[10px] font-mono font-bold text-zinc-300">{{ String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0') }}</td>
+                          <td class="py-4 px-8">
                               <div class="flex items-center gap-2">
                                   <span v-if="item.is_collection" class="bg-zinc-900 text-white text-[7px] px-1 font-black shrink-0">STACK</span>
                                   <div class="text-[11px] font-black text-zinc-900 uppercase group-hover:translate-x-1 transition-transform truncate">{{ item.collection_title || item.title }}</div>
                               </div>
                           </td>
-                          <td class="py-4 px-8 pointer-events-none"><div class="text-[9px] text-zinc-400 font-bold italic line-clamp-2 leading-relaxed">{{ item.excerpt || 'No summary.' }}</div></td>
-                          <td class="py-4 px-8 pointer-events-none">
+                          <td class="py-4 px-8"><div class="text-[9px] text-zinc-400 font-bold italic line-clamp-2 leading-relaxed">{{ item.excerpt || 'No summary.' }}</div></td>
+                          <td class="py-4 px-8">
                               <div class="flex flex-wrap gap-1">
                                   <BaseTag v-for="tag in (item.tags ? String(item.tags).split(',') : [])" :key="tag">
                                     {{ tag.trim() }}

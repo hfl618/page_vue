@@ -20,7 +20,7 @@ const {
             <h1 class="text-4xl font-black uppercase tracking-tighter text-zinc-900 leading-none">Registry_Add</h1>
             <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-[0.4em] mt-3 italic">Module_System_v2.0 // Node_Link</p>
           </div>
-          <button @click="purgeSession" class="text-[11px] font-black text-zinc-900 border-b-2 border-zinc-900 uppercase px-1">PURGE_SESSION</button>
+          <BaseActionLink @click="purgeSession">PURGE_SESSION</BaseActionLink>
         </header>
 
         <form @submit.prevent="handleDeploy" class="space-y-12 pb-20">
@@ -31,6 +31,7 @@ const {
             
             <div class="flex flex-col md:flex-row gap-12 items-start">
               <!-- 图标预览与上传 -->
+              <!-- ... (此处保持不变) ... -->
               <div class="flex flex-col items-center shrink-0">
                 <div class="w-20 h-20 border-2 border-zinc-900 bg-zinc-50 flex items-center justify-center relative group transition-all"
                      :class="iconPreview ? 'bg-white' : 'border-dashed border-zinc-300'">
@@ -47,11 +48,11 @@ const {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900">Display Label</label>
-                    <BaseInput v-model="form.label" placeholder="MODULE NAME..." required class="!bg-transparent !border-0 !border-b-2 !px-0" />
+                    <BaseInput v-model="form.label" placeholder="MODULE NAME..." required />
                   </div>
                   <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900">Registry Slug</label>
-                    <BaseInput v-model="form.slug" @input="slugCustomized=true" placeholder="ENDPOINT-NAME..." required class="!bg-transparent !border-0 !border-b-2 !px-0 font-mono" />
+                    <BaseInput v-model="form.slug" @input="slugCustomized=true" placeholder="ENDPOINT-NAME..." required class="font-mono" />
                     <div class="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-2">
                       Endpoint: <span class="text-zinc-900">/tools/{{ form.slug || '---' }}/</span>
                     </div>
@@ -61,13 +62,13 @@ const {
                 <div class="pt-4 border-t border-zinc-100 grid grid-cols-1 sm:grid-cols-3 gap-8 items-end">
                   <div class="space-y-1">
                     <label class="text-[9px] font-black uppercase text-zinc-400">Build_v</label>
-                    <BaseInput v-model="form.version" class="!bg-transparent !border-0 !border-b !px-0 !py-1 text-[11px] font-mono" />
+                    <BaseInput v-model="form.version" class="text-[11px] font-mono" />
                   </div>
                   <div class="space-y-1">
                     <label class="text-[9px] font-black uppercase text-zinc-400">Weight</label>
-                    <BaseInput v-model="form.sortWeight" type="number" class="!bg-transparent !border-0 !border-b !px-0 !py-1 text-[11px] font-mono" />
+                    <BaseInput v-model="form.sortWeight" type="number" class="text-[11px] font-mono" />
                   </div>
-                  <div class="flex items-center justify-between pb-1 border-b border-zinc-100">
+                  <div class="flex items-center gap-4 pb-1 border-b border-zinc-100">
                     <span class="text-[9px] font-black uppercase text-zinc-400">Public</span>
                     <PhysicalSwitch v-model="form.isPublic" />
                   </div>
@@ -77,6 +78,7 @@ const {
           </div>
 
           <!-- 2. Bundle Upload -->
+          <!-- ... (保持不变) ... -->
           <div class="bg-white border-2 border-zinc-900 p-8 relative shadow-[8px_8px_0px_#f4f4f5]">
             <div class="absolute -top-3 left-6 bg-zinc-900 text-white text-[8px] font-black px-2 py-0.5 tracking-widest uppercase">Bundle_Upload</div>
             
@@ -107,7 +109,7 @@ const {
             <div class="space-y-10">
               <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase tracking-widest text-zinc-900">Category_Tag</label>
-                <BaseInput v-model="form.categoryTag" placeholder="E.G. HARDWARE_TOOL" class="!bg-transparent !border-0 !border-b-2 !px-0" />
+                <BaseInput v-model="form.categoryTag" placeholder="E.G. HARDWARE_TOOL" />
               </div>
               <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase tracking-widest text-zinc-900">Module_Description</label>
@@ -117,13 +119,13 @@ const {
           </div>
 
           <!-- 4. Deploy Action -->
-          <div class="pt-16 pb-12 flex flex-col items-center border-t-4 border-zinc-900">
-            <button type="submit" class="group text-center outline-none">
-              <span class="text-5xl font-black uppercase tracking-tighter text-zinc-900 border-b-[8px] border-zinc-900 pb-2 transition-all hover:bg-zinc-900 hover:text-white px-8 inline-block leading-none">
-                DEPLOY
-              </span>
-              <div class="mt-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.5em] group-hover:text-zinc-900 transition-colors italic">Commit_To_Global_Registry</div>
-            </button>
+          <div class="pt-16 pb-12 flex justify-center border-t-4 border-zinc-900">
+            <BaseButton 
+              type="submit" 
+              class="w-auto px-20 py-4"
+            >
+              <span class="text-lg font-black uppercase tracking-[0.3em]">Deploy Module</span>
+            </BaseButton>
           </div>
         </form>
 

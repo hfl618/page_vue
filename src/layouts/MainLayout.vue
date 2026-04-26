@@ -1,12 +1,15 @@
 <script setup>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/store/user'
 
 /**
  * @description 主布局组件
  * 采用逻辑解耦模式，利用自动导入消除冗余。
  */
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 const showUserMenu = ref(false)
 
 // 导航配置
@@ -17,6 +20,12 @@ const navItems = [
 
 const isActive = (path) => route.path.startsWith(path)
 const closeUserMenu = () => { showUserMenu.value = false }
+
+const handleLogout = () => {
+  userStore.logout()
+  router.push('/login')
+  closeUserMenu()
+}
 </script>
 
 <template>
@@ -38,7 +47,7 @@ const closeUserMenu = () => { showUserMenu.value = false }
       <div class="mt-auto flex flex-col w-full items-center relative pb-4">
         <button @click.stop="showUserMenu = !showUserMenu" class="group outline-none">
           <div class="w-7 h-7 border-2 border-zinc-900 grayscale shadow-[2px_2px_0px_#f4f4f5] group-hover:shadow-none transition-all overflow-hidden">
-            <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Admin" class="w-full h-full object-cover">
+            <img :src="`https://api.dicebear.com/7.x/notionists/svg?seed=${userStore.currentUser?.username || 'Guest'}`" class="w-full h-full object-cover">
           </div>
         </button>
         <!-- 浮动菜单 -->
@@ -55,6 +64,15 @@ const closeUserMenu = () => { showUserMenu.value = false }
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.756 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.756 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.756 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.756 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.756 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.756 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.756 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
               </template>
               Settings
+            </BaseMenuItem>
+            
+            <div class="h-px bg-zinc-100 my-0.5"></div>
+
+            <BaseMenuItem @click="handleLogout" class="!text-red-500 hover:!bg-red-50">
+              <template #icon>
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+              </template>
+              Logout
             </BaseMenuItem>
           </div>
         </div>

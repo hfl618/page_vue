@@ -10,6 +10,23 @@ export function useDiscover() {
   const allTools = ref([])
   const loading = ref(false)
 
+  // 1. 配置池 (所有可选分类)
+  const allPool = ref([
+    { id: 1, name: 'General' },
+    { id: 2, name: 'Embedded' },
+    { id: 3, name: 'Python' },
+    { id: 4, name: 'Hardware' },
+    { id: 5, name: 'Web API' },
+    { id: 6, name: 'Tools' },
+    { id: 7, name: 'AI ML' },
+    { id: 8, name: 'Robotics' },
+    { id: 9, name: 'Test' },
+    { id: 10, name: 'Storage' }
+  ])
+  
+  // 临时状态（用于弹窗编辑）
+  const tempNav = ref([])
+
   // 模拟数据（未来可改为 API 请求）
   const mockTools = [
     {
@@ -58,6 +75,8 @@ export function useDiscover() {
     } else {
       navCategories.value = ['All', 'Favorites', 'Utility', 'Hardware']
     }
+    // 同步临时状态
+    tempNav.value = [...navCategories.value]
   }
 
   const filteredTools = computed(() => {
@@ -72,13 +91,31 @@ export function useDiscover() {
     activeCategory.value = cat
   }
 
+  const toggleTempNav = (name) => {
+    if (tempNav.value.includes(name)) {
+      tempNav.value = tempNav.value.filter(n => n !== name)
+    } else {
+      tempNav.value.push(name)
+    }
+  }
+
+  const applyNav = () => {
+    navCategories.value = [...tempNav.value]
+    localStorage.setItem('heflos_discover_nav', JSON.stringify(navCategories.value))
+    showConfigModal.value = false
+  }
+
   return {
     activeCategory,
     navCategories,
     showConfigModal,
+    allPool,
+    tempNav,
     filteredTools,
     loading,
     init,
-    setCategory
+    setCategory,
+    toggleTempNav,
+    applyNav
   }
 }
