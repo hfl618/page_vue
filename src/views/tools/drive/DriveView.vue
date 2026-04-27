@@ -9,7 +9,7 @@ import DriveDetailPanel from './components/DriveDetailPanel.vue'
 const {
   currentPath, pathInput, isEditingPath, pathInputField, files, selectedItems, 
   isLoading, isSyncing, searchQuery, suggestions, showSuggestions, activeSuggestionIndex,
-  userStore, filteredFiles,
+  userStore, uiStore, filteredFiles,
   fetchFiles, toggleSelection, toggleSelect, handleMkdir, handleUpload, formatSize, router,
   onPathInput, moveSuggestion, selectSuggestion, handlePathSubmit, startEditingPath, closeSuggestions
 } = useDrive()
@@ -30,14 +30,56 @@ const goUp = () => {
 // 刷新
 const refresh = () => fetchFiles(currentPath.value)
 
-// 详情面板触发的操作
-const handleAction = (type) => {
-  if (type === 'PREVIEW' && selectedItems.value.length === 1) {
-    const file = selectedItems.value[0]
-    if (file.type !== 'folder') {
-      const path = currentPath.value === '/' ? `/${file.name}` : `${currentPath.value}/${file.name}`
-      window.open(`/api/v1/drive/download?path=${encodeURIComponent(path)}`, '_blank')
-    }
+// 详情面板触发的操作 (物理加固版)
+const handleAction = async (type) => {
+  const selected = selectedItems.value
+  if (selected.length === 0) return
+
+  const paths = selected.map(file => {
+    return currentPath.value === '/' ? `/${file.name}` : `${currentPath.value}/${file.name}`
+  })
+
+  switch (type) {
+    case 'PREVIEW':
+      if (selected.length === 1 && selected[0].type !== 'folder') {
+        window.open(`/api/v1/drive/download?path=${encodeURIComponent(paths[0])}`, '_blank')
+      }
+      break
+    
+    case 'DOWNLOAD':
+      // 物理级下载：遍历并触发下载
+      paths.forEach(path => {
+        const link = document.createElement('a')
+        link.href = `/api/v1/drive/download?path=${encodeURIComponent(path)}`
+        link.download = path.split('/').pop()
+        link.click()
+      })
+      break
+
+    case 'DELETE':
+      if (confirm(`Wipe ${selected.length} units from registry?`)) {
+        try {
+          await driveApi.delete(paths)
+          uiStore.addNotice({ title: 'WIPED', message: 'Registry updated.', type: 'success' })
+          refresh()
+        } catch (e) {}
+      }
+      break
+
+    case 'RENAME':
+      const oldFile = selected[0]
+      const newName = prompt("New identity label:", oldFile.name)
+      if (newName && newName !== oldFile.name) {
+        await driveApi.rename({ 
+          oldPath: currentPath.value === '/' ? `/${oldFile.name}` : `${currentPath.value}/${oldFile.name}`,
+          newName 
+        })
+        refresh()
+      }
+      break
+
+    default:
+      uiStore.addNotice({ title: 'PROTOCOL_UPDATE', message: 'Action logic currently in deployment.', type: 'info' })
   }
 }
 
@@ -118,8 +160,11 @@ onMounted(() => fetchFiles('/'))
           </div>
 
           <div class="flex gap-5 items-center shrink-0">
-            <!-- 加载状态字 -->
-            <div v-if="isSyncing" class="text-[8px] font-black text-blue-600 animate-pulse tracking-widest mr-2">[SYNCING...]</div>
+            <!-- 加载状态字 (物理级增强) -->
+            <div v-if="isSyncing" class="text-[9px] font-black text-blue-600 animate-sync-flash tracking-widest mr-2 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+              [SYNCING_ACTIVE]
+            </div>
             <BaseActionLink @click="refresh" class="text-[9px]">Refresh</BaseActionLink>
             <BaseActionLink @click="fileInput.click()" class="text-[9px]">Upload</BaseActionLink>
             <BaseActionLink @click="handleMkdir" class="text-[9px]">Mkdir</BaseActionLink>
@@ -127,9 +172,9 @@ onMounted(() => fetchFiles('/'))
           </div>
         </div>
 
-        <!-- 物理级同步进度条 (2px 高度, 更鲜艳) -->
+        <!-- 物理级同步进度条 (2px 高度, 流水滚动效果) -->
         <div class="h-[2px] w-full bg-zinc-50 relative overflow-hidden">
-          <div v-if="isSyncing" class="absolute inset-0 bg-blue-600 transition-all duration-300 animate-pulse"></div>
+          <div v-if="isSyncing" class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-600 to-transparent animate-flow-line"></div>
         </div>
 
         <!-- 2. 文件列表表格 -->
@@ -179,6 +224,9 @@ onMounted(() => fetchFiles('/'))
           @preview="handleAction('PREVIEW')"
           @download="handleAction('DOWNLOAD')"
           @delete="handleAction('DELETE')"
+          @copy="handleAction('COPY')"
+          @move="handleAction('MOVE')"
+          @rename="handleAction('RENAME')"
         />
       </div>
     </div>
@@ -188,4 +236,23 @@ onMounted(() => fetchFiles('/'))
 <style scoped>
 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; }
+
+.animate-sync-flash {
+  animation: sync-flash 3s ease-in-out infinite;
+}
+
+.animate-flow-line {
+  animation: flow-line 3s linear infinite;
+  background-size: 200% 100%;
+}
+
+@keyframes sync-flash {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.97); }
+}
+
+@keyframes flow-line {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 </style>

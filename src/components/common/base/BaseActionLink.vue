@@ -14,6 +14,13 @@ defineProps({
   // 是否加粗
   bold: { type: Boolean, default: false }
 })
+
+const emit = defineEmits(['click'])
+
+const handleClick = (e) => {
+  if (props.to || props.href) return // 如果是链接，交给浏览器处理
+  emit('click', e)
+}
 </script>
 
 <template>
@@ -21,6 +28,7 @@ defineProps({
     :is="to ? 'router-link' : (href ? 'a' : (to === '' && href === '' ? 'span' : 'button'))"
     :to="to"
     :href="href"
+    @click="handleClick"
     class="transition-all uppercase px-0.5 pb-0.5 text-[10px] inline-block cursor-pointer border-b-2 border-transparent"
     :class="[
       block ? 'w-full text-center' : '',
