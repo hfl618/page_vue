@@ -10,7 +10,7 @@ console.info('[View] KnowledgeList loading...')
 const {
   viewMode, currentStack, showDirectory, dirSearch, currentPage, itemsPerPage,
   filteredArticles, paginatedItems, totalPages, visiblePages, indexItems,
-  processingIds, selectedIds, 
+  processingIds, selectedIds, loading,
   init, openStack, toggleSelection, toggleAll, clearSelection, 
   handleDeleteArticle, handleTogglePrivacy, userStore
 } = useKnowledge()
@@ -40,8 +40,15 @@ onMounted(() => {
         />
 
         <!-- 2. 内容网格 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-          <!-- 创建按钮 -->
+        <div class="relative min-h-[400px]">
+          <!-- 局部加载遮罩 -->
+          <div v-if="loading" class="absolute inset-0 z-[50] flex flex-col items-center justify-center bg-[#fafafa]">
+            <div class="w-10 h-10 border-4 border-zinc-100 border-t-zinc-900 rounded-full animate-spin mb-4"></div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-900 animate-pulse">Syncing Protocols...</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+            <!-- 创建按钮 -->
           <router-link 
             v-if="viewMode === 'personal' && !currentStack" 
             to="/knowledge/editor/new" 
@@ -68,6 +75,7 @@ onMounted(() => {
         </div>
       </div>
     </div>
+  </div>
 
     <!-- 3. 批量操作条 -->
     <BatchActionBar 

@@ -7,9 +7,10 @@ import request from '@/api/request'
 
 /**
  * @description 获取当前登录用户的个人文章列表
+ * @param {Object} [config] - axios 配置
  * @returns {Promise<Array>} 文章对象数组
  */
-export const fetchUserArticles = () => request.get('/v1/user/articles')
+export const fetchUserArticles = (config = {}) => request.get('/v1/user/articles', config)
 
 /**
  * @description 获取全站公共探索文章列表

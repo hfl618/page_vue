@@ -63,7 +63,7 @@ export function useKnowledgeReader() {
     // 2. 静默请求完整内容，不再显示全局 Loading
     try {
       // 显式指定超时与静默加载
-      const data = await fetchArticleDetail(id, { timeout: 10000, hideLoading: true })
+      const data = await fetchArticleDetail(id, { timeout: 20000, hideLoading: true })
       if (data) {
         article.value = data
         wordCount.value = calculateWords(data.content)

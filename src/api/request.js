@@ -1,7 +1,9 @@
 import axios from 'axios'
 import { useUiStore } from '@/store/ui'
+import { useUserStore } from '@/store/user'
 import { STORAGE_KEYS, RESPONSE_CODES } from '@/constants'
 import { storage } from '@/utils/storage'
+import router from '@/router'
 
 const service = axios.create({
   baseURL: '/api',
@@ -37,7 +39,7 @@ service.interceptors.response.use(
       if (!config.hideLoading) {
         uiStore.addNotice({
           title: 'PROTOCOL_ERROR',
-          message: res.msg || 'Unknown failure.',
+          message: `[Code: ${res.code}] ${res.msg || 'Unknown failure.'}`,
           type: 'error'
         })
       }
@@ -56,27 +58,43 @@ service.interceptors.response.use(
   },
   error => {
     const uiStore = useUiStore()
+    const userStore = useUserStore()
     uiStore.hideLoading()
 
     let message = 'Connection failed.'
+    const status = error.response ? error.response.status : null
+
     if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       message = 'NETWORK_TIMEOUT: System core is not responding.'
-    } else if (error.response) {
-      switch (error.response.status) {
-        case 401: message = 'Authentication required.'; break
-        case 403: message = 'Access protocol denied.'; break
-        case 404: message = 'Registry path not found.'; break
-        case 500: message = 'System core failure.'; break
-        default: message = `PROTOCOL_ERR_${error.response.status}`; break
+    } else if (status) {
+      switch (status) {
+        case RESPONSE_CODES.UNAUTHORIZED: 
+          message = `[${status}] Session expired. Please login again.`
+          // 401 处理：清除状态并跳转
+          userStore.logout()
+          if (router.currentRoute.value.name !== 'login') {
+            router.push({ 
+              name: 'login', 
+              query: { redirect: router.currentRoute.value.fullPath } 
+            })
+          }
+          break
+        case RESPONSE_CODES.FORBIDDEN: message = `[${status}] Access protocol denied.`; break
+        case RESPONSE_CODES.NOT_FOUND: message = `[${status}] Registry path not found.`; break
+        case RESPONSE_CODES.SERVER_ERROR: message = `[${status}] System core failure.`; break
+        default: message = `PROTOCOL_ERR_${status}`; break
       }
     }
 
-    uiStore.addNotice({
-      title: 'NETWORK_FAILURE',
-      message: message,
-      type: 'error',
-      tag: 'network-err'
-    })
+    // 避免在 401 时弹出重复的报错，如果已经在登录页则不重复提示
+    if (status !== RESPONSE_CODES.UNAUTHORIZED || router.currentRoute.value.name !== 'login') {
+      uiStore.addNotice({
+        title: 'NETWORK_FAILURE',
+        message: message,
+        type: 'error',
+        tag: 'network-err'
+      })
+    }
 
     return Promise.reject(error)
   }

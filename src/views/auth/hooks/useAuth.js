@@ -78,7 +78,10 @@ export function useAuth() {
       // 存储用户信息并跳转
       userStore.setToken(data.token)
       await userStore.fetchProfile()
-      router.push('/')
+      
+      // 核心增强：读取重定向参数
+      const redirectPath = router.currentRoute.value.query.redirect || '/'
+      router.push(redirectPath)
     } catch (err) {
       // 错误已处理
     } finally {

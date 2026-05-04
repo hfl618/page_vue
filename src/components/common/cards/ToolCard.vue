@@ -1,8 +1,10 @@
 <script setup>
+import { ref } from 'vue'
 /**
  * @description 工具展示卡片
  */
-defineProps({
+const props = defineProps({
+  id: [String, Number],
   name: String,
   description: String,
   iconPath: String,
@@ -16,46 +18,31 @@ defineProps({
 })
 
 const emit = defineEmits(['toggle-fav'])
-
-const imgLoaded = ref(false)
-const onImageLoad = () => {
-  imgLoaded.value = true
-}
 </script>
 
 <template>
   <div class="tool-paper-card p-[15px] flex flex-col justify-between group h-[160px] bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] hover:-translate-x-1 hover:scale-[1.02] hover:shadow-[10px_8px_0px_#f4f4f5] transition-all duration-300 rounded-0 relative overflow-hidden text-left" translate="no">
     
-    <!-- 右上角：收藏按钮 (原子化) -->
-    <!-- ... (保持不变) ... -->
+    <!-- 右上角：统一收藏按钮 (乐观更新版) -->
     <div class="absolute top-2.5 right-2.5 z-30 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <BaseIconButton 
-        :active="favStatus"
-        @click.stop="emit('toggle-fav')"
-      >
-        <svg class="w-3.5 h-3.5" :class="favStatus ? 'fill-current text-zinc-900' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.784.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-      </BaseIconButton>
+      <BaseFavoriteButton type="tool" :id="props.id" :label="name" size="w-[28px] h-[28px]" />
     </div>
 
     <div class="flex flex-col gap-3 flex-1 min-w-0">
       <!-- 1. 顶部行 -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 border border-zinc-900 flex items-center justify-center bg-zinc-100 shrink-0 overflow-hidden relative p-1.5">
-          <!-- 1. 图片图标：增加懒加载与淡入效果 -->
-          <img v-if="iconUrl" 
-               :src="iconUrl" 
-               loading="lazy"
-               @load="onImageLoad"
-               class="w-full h-full object-contain relative z-10 transition-opacity duration-500 opacity-0"
-               :class="{ 'opacity-100': imgLoaded }">
-          
-          <!-- 2. SVG 图标占位 -->
-          <svg v-else class="w-5 h-5 text-zinc-900 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" :d="iconPath" />
-          </svg>
-        </div>
+        <!-- 工业级图标容器：由 BaseAvatar 驱动 -->
+        <BaseAvatar 
+          :src="iconUrl" 
+          size="md" 
+          shape="square" 
+          border="thin" 
+          bg-color="bg-zinc-100" 
+          img-padding="p-1.5"
+          :fallback-text="name?.substring(0, 4)"
+          :angle="-10"
+        />
+        
         <div class="flex-1 min-w-0 pr-8">
           <div class="flex items-baseline gap-2 overflow-hidden">
             <BaseTitle level="h3" size="text-[13px]" class="line-clamp-2 leading-tight !font-bold">
@@ -69,7 +56,7 @@ const onImageLoad = () => {
       <div class="flex flex-col gap-1.5">
         <div class="flex items-center gap-2">
           <BaseTag>#{{ tag }}</BaseTag>
-          <BaseTag v-if="isCore">Core</BaseTag>
+          <BaseTag v-if="isCore" class="!bg-zinc-900 !text-white !border-zinc-900">Core</BaseTag>
         </div>
         <p class="text-[10px] text-zinc-400 font-bold leading-relaxed line-clamp-2 italic">{{ description }}</p>
       </div>
@@ -90,7 +77,7 @@ const onImageLoad = () => {
         :href="url" 
         class="!rounded-none !h-7 shadow-none active:translate-x-0 active:translate-y-0"
       >
-        <span class="text-[8px] font-bold uppercase tracking-[0.3em]">Launch Module</span>
+        <span class="text-[10px] font-black uppercase tracking-[0.2em]">Launch Module</span>
       </BaseButton>
     </div>
   </div>

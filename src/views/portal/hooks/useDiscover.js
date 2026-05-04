@@ -1,72 +1,129 @@
-import { ref, computed } from 'vue'
-import { fetchCloudTools, toggleToolFavorite } from '@/api/modules/tools'
+import { ref, computed, watch, onMounted } from 'vue'
+import { fetchCloudTools } from '@/api/modules/tools'
+import { fetchCategories } from '@/api/modules/categories'
 import { useUiStore } from '@/store/ui'
+import { useUserStore } from '@/store/user'
 
 /**
- * @description 发现页（工具库）业务逻辑 - 极端物理容错版
+ * @description 发现页（工具库）业务逻辑
  */
 export function useDiscover() {
   const uiStore = useUiStore()
+  const userStore = useUserStore()
   const activeCategory = ref('All')
   const navCategories = ref(['All', 'Favorites'])
   const showConfigModal = ref(false)
   const allTools = ref([])
   const loading = ref(false)
-
-  // 1. 配置池 (固化预设，防止后端 404 导致 UI 闪烁)
-  const allPool = ref([
-    { id: 1, name: 'General' }, { id: 2, name: 'Embedded' },
-    { id: 3, name: 'Python' }, { id: 4, name: 'Hardware' },
-    { id: 5, name: 'Web API' }, { id: 6, name: 'Tools' },
-    { id: 7, name: 'AI ML' }, { id: 8, name: 'Robotics' },
-    { id: 9, name: 'Test' }, { id: 10, name: 'Storage' }
-  ])
-  
+  const allPool = ref([])
   const tempNav = ref([])
 
-  /**
-   * @description 从云端同步数据 (极速 5s 超时)
-   */
-  const syncCloudData = async () => {
-    // 优先读取本地缓存
-    const cache = localStorage.getItem('heflos_tools_cache')
-    if (cache) allTools.value = JSON.parse(cache)
+  // 1. 核心映射逻辑 (抽离以复用)
+  const mapTools = (tools) => {
+    return tools.map(t => {
+      const toolId = String(t.id || t.path)
+      const favStatus = t.favStatus !== undefined ? t.favStatus : t.fav_status
+      const isCore = t.isCore !== undefined ? t.isCore : (t.is_core === 1)
 
+      let finalIconUrl = t.iconUrl || t.icon_url
+      let finalIconPath = t.iconPath || t.icon_path
+
+      if (finalIconPath && (finalIconPath.startsWith('M') || finalIconPath.startsWith('m'))) {
+        // SVG 指令
+      } else if (finalIconPath && finalIconPath.includes('/')) {
+        if (!finalIconUrl) {
+          finalIconUrl = finalIconPath.startsWith('/') ? finalIconPath : `/${finalIconPath}`
+        }
+        finalIconPath = null
+      }
+
+      if (finalIconUrl && !finalIconUrl.startsWith('/') && !finalIconUrl.startsWith('http')) {
+        // 核心修复：如果是 system/tool_icons/ 路径，转换成后端 icon API 路径
+        if (finalIconUrl.includes('system/tool_icons/')) {
+          const filename = finalIconUrl.split('/').pop();
+          finalIconUrl = `/api/tools/icon/${filename}`;
+        } else {
+          finalIconUrl = `/api/${finalIconUrl}`;
+        }
+      }
+
+
+      return {
+        id: toolId, 
+        name: t.name || t.label, 
+        description: t.description,
+        iconPath: finalIconPath, 
+        iconUrl: finalIconUrl, 
+        tag: t.tag,
+        version: t.version, 
+        isCore: isCore,
+        favStatus: favStatus, 
+        author: t.author, 
+        url: t.url
+      }
+    })
+  }
+
+  /**
+   * @description 物理同步：从 Bootstrap 数据中注入
+   */
+  const syncFromBootstrap = () => {
+    const { tools, categories, initialNav } = userStore.bootstrapData
+    
+    if (tools && tools.length > 0) {
+      allTools.value = mapTools(tools)
+    }
+    if (categories && categories.length > 0) {
+      allPool.value = categories
+    }
+    if (initialNav && initialNav.length > 0) {
+      navCategories.value = initialNav
+      tempNav.value = [...initialNav]
+    }
+  }
+
+  const syncCloudData = async () => {
+    // 如果已经有 bootstrap 数据，则跳过初始同步
+    if (allTools.value.length > 0) return
+
+    loading.value = true
     try {
-      // 物理级静默同步，仅针对已部署的 list 接口
-      const tools = await fetchCloudTools({ 
-        timeout: 5000, 
-        hideLoading: true 
-      })
-      
+      const tools = await fetchCloudTools({ timeout: 15000, hideLoading: true })
       if (tools) {
-        const mappedData = tools.map(t => ({
-          id: t.path, name: t.label || t.name, description: t.description,
-          iconPath: t.icon_path, iconUrl: t.icon_url, tag: t.tag,
-          version: t.version, isCore: t.is_core === 1,
-          favStatus: t.fav_status, author: t.author, url: t.url
-        }))
-        allTools.value = mappedData
-        localStorage.setItem('heflos_tools_cache', JSON.stringify(mappedData))
+        allTools.value = mapTools(tools)
       }
     } catch (err) {
-      console.warn('Background sync timed out, running on cache.')
+      console.warn('Sync failed, using cache.')
     } finally {
       loading.value = false
     }
   }
 
-  const init = () => {
-    syncCloudData()
+  const init = async () => {
+    syncFromBootstrap() // 优先从全局 Bootstrap 获取数据
+    
+    // 物理补丁：如果全局没拿到数据（比如 404），则手动触发独立同步
+    if (!userStore.bootstrapData.tools || userStore.bootstrapData.tools.length === 0) {
+      console.info('[useDiscover] Bootstrap empty, falling back to independent sync.')
+      await syncCloudData()
+    }
+    
     const saved = localStorage.getItem('heflos_discover_nav')
-    if (saved) navCategories.value = JSON.parse(saved)
-    tempNav.value = [...navCategories.value]
+    if (saved) {
+      navCategories.value = JSON.parse(saved)
+      tempNav.value = [...navCategories.value]
+    }
   }
+
+  // 监听全局启动数据，实现即时同步
+  watch(() => userStore.bootstrapData.tools, () => {
+    syncFromBootstrap()
+  }, { deep: true })
 
   const filteredTools = computed(() => {
     return allTools.value.filter(tool => {
       if (activeCategory.value === 'All') return true
-      if (activeCategory.value === 'Favorites') return tool.favStatus
+      if (activeCategory.value === 'Favorites') return userStore.isFavorited('tool', tool.id)
       return tool.tag === activeCategory.value
     })
   })

@@ -3,7 +3,7 @@
  * @description 工业风下划线动作链接
  * 特性：只有鼠标悬停时才显现下划线，保持界面清爽。
  */
-defineProps({
+const props = defineProps({
   to: { type: String, default: '' },
   href: { type: String, default: '' },
   block: { type: Boolean, default: false },

@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { driveApi } from '@/api/modules/drive'
 import { useDrive } from './hooks/useDrive'
 import DriveDetailPanel from './components/DriveDetailPanel.vue'
 
@@ -217,7 +218,7 @@ onMounted(() => fetchFiles('/'))
           </table>
         </div>
 
-        <!-- 3. 详情面板 -->
+        <!-- 3. 详情面板 (物理事件链加固) -->
         <DriveDetailPanel 
           :selected-items="selectedItems"
           :current-path="currentPath"

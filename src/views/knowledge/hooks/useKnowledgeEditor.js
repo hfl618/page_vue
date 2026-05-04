@@ -28,15 +28,37 @@ export function useKnowledgeEditor() {
    * @description 初始化数据（分类、父级、文章详情）
    */
   const init = async () => {
+    // 物理保底分类，防止接口 404 导致选择器空白
+    const fallbackCategories = [
+      { id: 1, name: 'General' }, { id: 2, name: 'Technical' }, 
+      { id: 3, name: 'Protocol' }, { id: 4, name: 'Archive' }
+    ]
+
     try {
-      const [catRes, parentRes, detail] = await Promise.all([
+      const results = await Promise.allSettled([
         request.get('/v1/knowledge/categories'),
         request.get('/v1/knowledge/potential-parents'),
         articleId.value ? request.get(`/v1/knowledge/read/${articleId.value}`) : Promise.resolve(null)
       ])
-      categories.value = catRes || []
-      parents.value = parentRes || []
-      if (detail) article.value = { ...article.value, ...detail }
+
+      // 1. 处理分类
+      if (results[0].status === 'fulfilled' && results[0].value) {
+        categories.value = results[0].value
+      } else {
+        console.warn('Categories registry 404, using fallback.')
+        categories.value = fallbackCategories
+      }
+
+      // 2. 处理父级
+      if (results[1].status === 'fulfilled' && results[1].value) {
+        parents.value = results[1].value
+      }
+
+      // 3. 处理详情
+      if (results[2].status === 'fulfilled' && results[2].value) {
+        const detail = results[2].value
+        article.value = { ...article.value, ...detail }
+      }
     } catch (e) {
       console.error('Core Sync Failure', e)
     } finally {

@@ -192,7 +192,7 @@ export function useDrive() {
   return {
     currentPath, pathInput, isEditingPath, pathInputField, files, selectedItems, 
     isLoading, isSyncing, searchQuery, suggestions, showSuggestions, activeSuggestionIndex,
-    userStore, filteredFiles, clipboard,
+    userStore, uiStore, filteredFiles, clipboard,
     fetchFiles, toggleSelection, toggleSelect, handleMkdir, handleUpload, formatSize, router,
     onPathInput, moveSuggestion, selectSuggestion, handlePathSubmit, startEditingPath, closeSuggestions
   }

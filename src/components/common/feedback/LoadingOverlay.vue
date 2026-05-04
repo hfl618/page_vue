@@ -6,11 +6,11 @@ const uiStore = useUiStore()
 </script>
 
 <template>
-  <Transition name="loading-zoom">
+  <Transition name="fade">
     <div v-if="uiStore.loading.show" class="fixed inset-0 z-[200000] flex items-center justify-center bg-white/10 backdrop-blur-xl" translate="no">
       
-      <!-- 物理容器：增加进场缩放动画 -->
-      <div class="loading-box border border-zinc-900 shadow-[8px_8px_0px_rgba(0,0,0,0.1)] px-12 py-10 flex flex-col items-center gap-8 bg-white/80">
+      <!-- 物理容器 -->
+      <div class="loading-box border border-zinc-900 shadow-[8px_8px_0px_#f4f4f5] px-12 py-10 flex flex-col items-center gap-8 bg-white">
         
         <!-- 核心 Loader 单元 -->
         <div class="w-14 h-14 border-2 border-zinc-900/10 flex items-center justify-center relative">
@@ -42,13 +42,11 @@ const uiStore = useUiStore()
 </template>
 
 <style scoped>
-/* 容器缩放淡入动画 */
-.loading-zoom-enter-active, .loading-zoom-leave-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
 }
-.loading-zoom-enter-from, .loading-zoom-leave-to {
+.fade-enter-from, .fade-leave-to {
   opacity: 0;
-  transform: scale(0.9);
 }
 
 /* 核心方块：物理旋转、圆角、缩放动画 */

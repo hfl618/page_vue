@@ -37,10 +37,16 @@ const { currentUser } = storeToRefs(userStore)
       <a href="#" class="hover:text-blue-600 transition-colors"><span class="font-bold text-zinc-900">45</span> following</a>
     </div>
 
-    <!-- 4. 简介 -->
-    <p class="text-[13px] text-zinc-700 leading-relaxed mb-6 font-medium">
-      {{ currentUser.bio }}
-    </p>
+    <!-- 4. 简介 (Industrial Style) -->
+    <div class="mb-6 flex flex-col gap-1.5">
+      <div class="flex items-center gap-2">
+        <span class="text-[9px] font-black text-zinc-900 bg-zinc-100 px-1.5 py-0.5 uppercase tracking-tighter">BIO_SECTOR</span>
+        <div class="h-[1px] flex-1 bg-zinc-100"></div>
+      </div>
+      <p class="text-[12px] text-zinc-500 leading-relaxed font-bold italic">
+        {{ currentUser.bio || 'STABLE_NODE: No custom bio protocol identified.' }}
+      </p>
+    </div>
 
     <!-- 5. 链接与位置 -->
     <div class="flex flex-col gap-4 mb-8">

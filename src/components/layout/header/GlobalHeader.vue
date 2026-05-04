@@ -16,25 +16,33 @@ const { searchQuery, parentLabel, currentLabel, goBack, handleSearch } = useHead
 
 <template>
   <header class="h-12 border-b border-zinc-100 bg-white flex items-center justify-between px-10 sticky top-0 z-40 w-full shrink-0">
-    <!-- 左侧：导航与返回 -->
-    <div class="flex items-center gap-4">
-      <button 
-        v-if="parentLabel" 
-        @click="goBack"
-        class="w-7 h-7 flex items-center justify-center border border-zinc-100 hover:border-zinc-900 transition-all group shrink-0"
-        title="Go Back"
-      >
-        <svg class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
+    <!-- 左侧：Logo 与 导航 -->
+    <div class="flex items-center gap-6">
+      <!-- 品牌标识：HeFlow -->
+      <router-link to="/" class="flex items-center gap-2 group decoration-none">
+        <div class="bg-zinc-100 text-zinc-900 border border-zinc-200 px-1.5 py-0.5 text-[10px] font-black tracking-tighter transition-all group-hover:bg-zinc-200 group-hover:border-zinc-300">HeFlow</div>
+        <div class="h-3 w-px bg-zinc-200 ml-1"></div>
+      </router-link>
 
-      <!-- 自动生成的面包屑 -->
-      <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap overflow-hidden">
-        <span v-if="parentLabel" class="text-zinc-400">{{ parentLabel }}</span>
-        <span v-if="parentLabel" class="text-zinc-200">/</span>
-        <span class="text-zinc-900">{{ currentLabel }}</span>
-      </nav>
+      <div class="flex items-center gap-4">
+        <button 
+          v-if="parentLabel" 
+          @click="goBack"
+          class="w-7 h-7 flex items-center justify-center border border-zinc-100 hover:border-zinc-900 transition-all group shrink-0"
+          title="Go Back"
+        >
+          <svg class="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <!-- 自动生成的面包屑 -->
+        <nav class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest whitespace-nowrap overflow-hidden">
+          <span v-if="parentLabel" class="text-zinc-400">{{ parentLabel }}</span>
+          <span v-if="parentLabel" class="text-zinc-200">/</span>
+          <span class="text-zinc-900">{{ currentLabel }}</span>
+        </nav>
+      </div>
     </div>
 
     <!-- 右侧：统一搜索模块 -->

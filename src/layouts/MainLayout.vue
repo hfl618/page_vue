@@ -52,9 +52,15 @@ const handleLogout = () => {
       <!-- 用户入口 -->
       <div class="mt-auto flex flex-col w-full items-center relative pb-4">
         <button @click.stop="showUserMenu = !showUserMenu" class="group outline-none">
-          <div class="w-7 h-7 border-2 border-zinc-900 grayscale shadow-[2px_2px_0px_#f4f4f5] group-hover:shadow-none transition-all overflow-hidden">
-            <img :src="`https://api.dicebear.com/7.x/notionists/svg?seed=${userStore.currentUser?.username || 'Guest'}`" class="w-full h-full object-cover">
-          </div>
+          <BaseAvatar 
+            :src="`https://api.dicebear.com/7.x/notionists/svg?seed=${userStore.currentUser?.username || 'Guest'}`"
+            size="28px"
+            shape="square"
+            border="thick"
+            class="grayscale shadow-[2px_2px_0px_#f4f4f5] group-hover:shadow-none"
+            :fallback-text="userStore.currentUser?.username?.substring(0, 1) || 'G'"
+            :angle="0"
+          />
         </button>
         <!-- 浮动菜单 -->
         <div v-show="showUserMenu" @click.stop class="absolute left-12 bottom-0 w-48 bg-white border border-zinc-900 shadow-[4px_4px_0px_#f4f4f5] z-[100] p-1">

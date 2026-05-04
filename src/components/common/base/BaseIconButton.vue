@@ -4,7 +4,7 @@
  * 支持物理反馈、禁用状态、局部转圈反馈及事件透传。
  */
 defineProps({
-  active: { type: Boolean, default: false },
+  active: { type: [Boolean, Number], default: false },
   activeClass: { type: String, default: 'text-zinc-900 border-zinc-900' },
   disabled: { type: Boolean, default: false },
   loading: { type: Boolean, default: false }

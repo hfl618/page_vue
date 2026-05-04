@@ -12,6 +12,12 @@ import request from '@/api/request'
 export const fetchMe = () => request.get('/v1/user/me')
 
 /**
+ * @description 获取当前用户的全量收藏 ID 列表
+ * @returns {Promise<Object>} 包含文章和工具收藏 ID 的对象
+ */
+export const fetchUserFavorites = () => request.get('/v1/user/favorites', { hideLoading: true })
+
+/**
  * @description 更新用户个人资料
  * @param {Object} data 待更新的用户字段
  * @param {Object} [config] axios 配置

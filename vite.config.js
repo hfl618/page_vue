@@ -13,6 +13,7 @@ export default defineConfig({
         'vue-router',
         'pinia',
         {
+          '@/api/modules/categories': ['fetchCategories'],
           '@/api/modules/auth': ['login', 'signup', 'logout', 'checkUsername'],
           '@/api/modules/knowledge': ['fetchUserArticles', 'fetchPublicArticles', 'fetchArticleDetail'],
           '@/api/modules/user': ['fetchMe', 'updateProfile'],
