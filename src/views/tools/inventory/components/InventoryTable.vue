@@ -48,8 +48,8 @@ const emit = defineEmits(['toggle-all', 'toggle-select', 'edit', 'adjust-stock']
 
       <template #col-mpn="{ item }">
         <div class="flex flex-col gap-0.5">
-          <span class="text-zinc-500 font-mono text-[10px]">{{ item.mpn || '--' }}</span>
-          <span class="text-zinc-300 text-[8px] uppercase tracking-widest">{{ item.package || '--' }}</span>
+          <span class="text-blue-900 font-mono text-[10px]">{{ item.mpn || '--' }}</span>
+          <span class="text-zinc-900 text-[8px] uppercase tracking-widest font-bold">{{ item.package || '--' }}</span>
         </div>
       </template>
 

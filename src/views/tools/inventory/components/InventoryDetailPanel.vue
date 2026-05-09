@@ -66,13 +66,6 @@ const specs = computed(() => {
           @delete="() => emit('delete')"
           @upload-source="(type) => emit('upload-source', type)"
         />
-
-        <!-- 底部仅保留系统状态文字 -->
-        <div class="px-6 py-2 bg-zinc-50/30 border-t border-zinc-50">
-          <div class="text-[10px] font-bold text-zinc-400 italic leading-none text-center">
-            Localized registry node accessed. Digital twin synchronized via HEFLOS-HUB.
-          </div>
-        </div>
       </template>
     </div>
   </Transition>
