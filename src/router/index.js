@@ -19,15 +19,20 @@ const routes = [
     component: KnowledgeList, 
     meta: { layout: 'main', title: 'REGISTRY', requiresAuth: true } 
   },
-  { 
-    path: '/tools/drive', 
-    name: 'drive', 
-    component: DriveView, 
-    meta: { layout: 'main', title: 'CLOUD DRIVE', parent: 'DISCOVERY', requiresAuth: true } 
+  {
+    path: '/tools/drive',
+    name: 'drive',
+    component: DriveView,
+    meta: { layout: 'main', title: 'CLOUD DRIVE', parent: 'DISCOVERY', requiresAuth: true }
   },
-  { 
-    path: '/knowledge/read/:id', 
-    name: 'knowledge-reader', 
+  {
+    path: '/tools/inventory',
+    name: 'inventory',
+    component: () => import('../views/tools/inventory/InventoryView.vue'),
+    meta: { layout: 'main', title: 'INVENTORY_MANAGER', parent: 'DISCOVERY', requiresAuth: true }
+  },
+  {
+    path: '/knowledge/read/:id',    name: 'knowledge-reader', 
     component: () => import('../views/knowledge/KnowledgeReader.vue'), 
     meta: { layout: 'main', title: 'READER', parent: 'REGISTRY' } 
   },

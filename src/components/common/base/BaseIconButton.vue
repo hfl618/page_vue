@@ -1,13 +1,25 @@
 <script setup>
 /**
- * @description 工业风小方块图标按钮 (增强版)
- * 支持物理反馈、禁用状态、局部转圈反馈及事件透传。
+ * @description 工业风图标按钮原子组件 (通用增强版)
+ * 支持：物理实体风格 (solid) 和 极简透明风格 (ghost)
  */
 defineProps({
   active: { type: [Boolean, Number], default: false },
   activeClass: { type: String, default: 'text-zinc-900 border-zinc-900' },
   disabled: { type: Boolean, default: false },
-  loading: { type: Boolean, default: false }
+  loading: { type: Boolean, default: false },
+  
+  // 风格变体: 'solid' (带边框阴影) | 'ghost' (透明无阴影)
+  variant: { type: String, default: 'solid' },
+  
+  // 边框样式: 'solid' | 'dashed' | 'dotted' | 'none'
+  borderStyle: { type: String, default: 'solid' },
+  
+  // 尺寸类名: 默认 w-[30px] h-[30px]
+  size: { type: String, default: 'w-[30px] h-[30px]' },
+  
+  // 圆角类名: 默认无圆角
+  radius: { type: String, default: 'rounded-none' }
 })
 </script>
 
@@ -15,16 +27,28 @@ defineProps({
   <button 
     v-bind="$attrs"
     :disabled="disabled || loading"
-    class="w-[30px] h-[30px] border flex items-center justify-center bg-white transition-all duration-200 outline-none shadow-[2px_2px_0px_#f4f4f5] relative"
+    class="flex items-center justify-center transition-all duration-200 outline-none relative"
     :class="[
-      // 基础样式：正在加载时也禁用位移，防止视觉错位
-      !disabled && !loading ? 'active:translate-x-0.5 active:translate-y-0.5 active:shadow-none cursor-pointer' : 'opacity-70 cursor-not-allowed',
-      // 颜色状态
-      active ? activeClass : 'text-zinc-300 border-zinc-100 hover:border-zinc-900 hover:text-zinc-900',
+      size, radius,
+      
+      // 1. 基础交互状态
+      !disabled && !loading ? 'active:translate-x-0.5 active:translate-y-0.5 cursor-pointer' : 'opacity-40 cursor-not-allowed',
+      
+      // 2. 风格变体逻辑
+      variant === 'solid' 
+        ? 'bg-white border shadow-[2px_2px_0px_#f4f4f5] active:shadow-none text-zinc-300 border-zinc-100 hover:border-zinc-900 hover:text-zinc-900' 
+        : 'bg-transparent border-none text-zinc-300 hover:bg-zinc-100 hover:text-zinc-900',
+      
+      // 3. 边框样式 (仅在 solid 或非 none 时生效)
+      variant === 'solid' ? (
+        borderStyle === 'dashed' ? 'border-dashed' : (borderStyle === 'dotted' ? 'border-dotted' : 'border-solid')
+      ) : '',
+      
+      // 4. 激活状态覆盖
+      active ? activeClass : ''
     ]"
   >
     <template v-if="loading">
-      <!-- 极简工业旋转器 -->
       <div class="w-3.5 h-3.5 border-2 border-zinc-200 border-t-zinc-900 animate-spin rounded-full"></div>
     </template>
     <template v-else>

@@ -34,6 +34,11 @@ service.interceptors.response.use(
     const res = response.data
     const config = response.config
 
+    // 物理加固：如果响应是二进制流 (Blob/ArrayBuffer)，直接返回，不解析 JSON 结构
+    if (res instanceof Blob || res instanceof ArrayBuffer) {
+      return res
+    }
+
     if (res.code !== RESPONSE_CODES.SUCCESS && res.code !== undefined) {
       // 物理加固：如果是后台静默请求，不弹出报错弹窗
       if (!config.hideLoading) {

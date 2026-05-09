@@ -21,6 +21,17 @@ const {
   filteredArticles
 } = useUserProfile()
 
+/**
+ * @description 模拟活动数据 (竖向展示)
+ */
+const activityRegistry = [
+  { id: 1, title: 'UPLOAD: SERIAL_BIN_V2.1', time: '24 MINS AGO' },
+  { id: 2, title: 'SYNC: SECTOR_4_REGISTRY', time: '2 HOURS AGO' },
+  { id: 3, title: 'AUTH: BIOMETRIC_UPLINK', time: '5 HOURS AGO' },
+  { id: 4, title: 'ARCHIVE: PACKET_88E2', time: 'YESTERDAY' },
+  { id: 5, title: 'FIREWALL: PROTOCOL_INIT', time: 'YESTERDAY' }
+]
+
 onMounted(() => {
   loadProfile()
 })
@@ -185,17 +196,36 @@ onMounted(() => {
             </div>
           </transition>
 
-          <!-- 5. Activity (占位) -->
+          <!-- 5. Activity (竖向时间线排列) -->
           <transition name="fade-slide">
-            <div v-if="activeTab === 'activity' && !currentStack" class="space-y-12 pl-4">
-              <div v-for="i in 3" :key="i" class="relative group">
-                <div class="absolute -left-[21px] top-0 bottom-0 w-px bg-zinc-100 group-last:bottom-auto group-last:h-4"></div>
-                <div class="absolute -left-[25px] top-1.5 w-2 h-2 rounded-full bg-zinc-900 border-2 border-white"></div>
-                <div class="flex flex-col gap-2">
-                  <span class="text-[10px] font-black text-zinc-300 uppercase tracking-widest">Protocol_Logged: 2026-05-04</span>
-                  <div class="bg-white border border-zinc-100 p-4 rounded-0 shadow-sm group-hover:border-zinc-900 transition-all">
-                    <p class="text-[13px] font-bold text-zinc-900 uppercase tracking-tighter">Identity synced with industrial sector registry #{{ i }}</p>
+            <div v-if="activeTab === 'activity' && !currentStack" class="flex flex-col gap-4">
+              <span class="text-[10px] font-black text-zinc-300 uppercase tracking-widest">Recent_Activity</span>
+              <div class="relative pl-4 flex flex-col gap-6">
+                <!-- 垂直轴线 -->
+                <div class="absolute left-[3px] top-1 bottom-1 w-px bg-zinc-100"></div>
+                
+                <div 
+                  v-for="item in activityRegistry" 
+                  :key="item.id" 
+                  class="relative group/step"
+                >
+                  <!-- 节点圆点 -->
+                  <div class="absolute -left-[16px] top-1 w-1.5 h-1.5 rounded-full bg-zinc-900 ring-4 ring-white z-10 transition-transform group-hover/step:scale-125"></div>
+                  
+                  <!-- 内容 -->
+                  <div class="flex flex-col gap-0.5">
+                    <div class="text-[10px] font-bold text-zinc-900 uppercase leading-tight group-hover/step:text-zinc-500 transition-colors">
+                      {{ item.title }}
+                    </div>
+                    <div class="text-[8px] font-mono text-zinc-300 uppercase">
+                      {{ item.time }}
+                    </div>
                   </div>
+                </div>
+
+                <!-- 扩展占位 (维持 5 个) -->
+                <div v-if="activityRegistry.length === 0" class="py-10 text-center border border-dashed border-zinc-100 bg-zinc-50/30">
+                  <span class="text-[10px] font-black text-zinc-300 uppercase tracking-widest">No Recent Transmission</span>
                 </div>
               </div>
             </div>

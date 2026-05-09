@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { driveApi } from '@/api/modules/drive'
 import { useDrive } from './hooks/useDrive'
 import DriveDetailPanel from './components/DriveDetailPanel.vue'
+import request from '@/api/request'
 
 /**
  * @description 云端硬盘主视图 (1:1 工业级还原版)
@@ -10,7 +11,7 @@ import DriveDetailPanel from './components/DriveDetailPanel.vue'
 const {
   currentPath, pathInput, isEditingPath, pathInputField, files, selectedItems, 
   isLoading, isSyncing, searchQuery, suggestions, showSuggestions, activeSuggestionIndex,
-  userStore, uiStore, filteredFiles,
+  userStore, uiStore, filteredFiles, clipboard,
   fetchFiles, toggleSelection, toggleSelect, handleMkdir, handleUpload, formatSize, router,
   onPathInput, moveSuggestion, selectSuggestion, handlePathSubmit, startEditingPath, closeSuggestions
 } = useDrive()
@@ -31,57 +32,141 @@ const goUp = () => {
 // 刷新
 const refresh = () => fetchFiles(currentPath.value)
 
+const handleClipboardExecute = async () => {
+  if (!clipboard.value.keys.length) return
+  const api = clipboard.value.type === 'MOVE' ? driveApi.move : driveApi.paste
+  try {
+    await api({ 
+      keys: clipboard.value.keys, 
+      path: currentPath.value,
+      operation: clipboard.value.type.toLowerCase() // 'copy' or 'move'
+    })
+    uiStore.addNotice({ title: 'TRANSFERRED', message: 'Asset relocation complete.', type: 'success' })
+    refresh()
+    clipboard.value = { type: null, keys: [] }
+  } catch (e) {}
+}
+
 // 详情面板触发的操作 (物理加固版)
 const handleAction = async (type) => {
   const selected = selectedItems.value
   if (selected.length === 0) return
 
-  const paths = selected.map(file => {
-    return currentPath.value === '/' ? `/${file.name}` : `${currentPath.value}/${file.name}`
-  })
+  const selectedKeys = selected.map(file => file.r2_key)
 
   switch (type) {
     case 'PREVIEW':
       if (selected.length === 1 && selected[0].type !== 'folder') {
-        window.open(`/api/v1/drive/download?path=${encodeURIComponent(paths[0])}`, '_blank')
+        const file = selected[0]
+        // 物理加固：window.open 无法带 Header，改用 axios 获取 Blob
+        try {
+          uiStore.showLoading('PREVIEW_LINKING', 'Establishing secure link...')
+          const res = await request.get(`/v1/drive/view/${encodeURIComponent(file.name)}`, {
+            params: { key: file.r2_key },
+            responseType: 'blob',
+            hideLoading: true
+          })
+          // res 已经是 Blob 对象 (由 interceptor 保证)
+          const url = window.URL.createObjectURL(res)
+          const newTab = window.open(url, '_blank')
+          if (!newTab) {
+            uiStore.addNotice({ title: 'POPUP_BLOCKED', message: 'Please allow popups to preview files.', type: 'warning' })
+          }
+        } catch (e) {
+          console.error('Preview failed:', e)
+        } finally {
+          uiStore.hideLoading()
+        }
       }
       break
     
     case 'DOWNLOAD':
-      // 物理级下载：遍历并触发下载
-      paths.forEach(path => {
+      selected.forEach(file => {
+        if (file.type === 'folder') return
         const link = document.createElement('a')
-        link.href = `/api/v1/drive/download?path=${encodeURIComponent(path)}`
-        link.download = path.split('/').pop()
+        link.href = `/api/v1/drive/download?path=${encodeURIComponent(file.r2_key)}`
+        link.download = file.name
         link.click()
       })
       break
 
+    case 'COPY':
+      clipboard.value = { type: 'COPY', keys: selectedKeys }
+      uiStore.addNotice({ title: 'COPIED', message: `${selected.length} items ready for cloning.`, type: 'info' })
+      break
+
+    case 'MOVE':
+      clipboard.value = { type: 'MOVE', keys: selectedKeys }
+      uiStore.addNotice({ title: 'STRIPPING', message: `${selected.length} items ready for relocation.`, type: 'info' })
+      break
+
     case 'DELETE':
       if (confirm(`Wipe ${selected.length} units from registry?`)) {
+        // 物理加固：严格过滤掉无效的 key，防止后端触发 NoneType 校验错误
+        const validKeys = selected
+          .map(file => file.r2_key)
+          .filter(key => key !== null && key !== undefined && key !== '')
+
+        if (validKeys.length === 0) {
+          uiStore.addNotice({ title: 'VALIDATION_ERR', message: 'No valid physical keys found for purge.', type: 'error' })
+          return
+        }
+
         try {
-          await driveApi.delete(paths)
+          await driveApi.delete(validKeys)
           uiStore.addNotice({ title: 'WIPED', message: 'Registry updated.', type: 'success' })
-          refresh()
-        } catch (e) {}
+          // 局部刷新
+          files.value = files.value.filter(f => !validKeys.includes(f.r2_key))
+          selectedItems.value = []
+        } catch (e) {
+          console.error('Delete execution failed:', e)
+        }
       }
       break
 
     case 'RENAME':
       const oldFile = selected[0]
-      const newName = prompt("New identity label:", oldFile.name)
-      if (newName && newName !== oldFile.name) {
-        await driveApi.rename({ 
-          oldPath: currentPath.value === '/' ? `/${oldFile.name}` : `${currentPath.value}/${oldFile.name}`,
-          newName 
-        })
-        refresh()
+      let namePart = oldFile.name, extPart = ""
+      const lastDot = oldFile.name.lastIndexOf('.')
+      if (oldFile.type !== 'folder' && lastDot !== -1) {
+        extPart = oldFile.name.substring(lastDot)
+        namePart = oldFile.name.substring(0, lastDot)
+      }
+
+      const newName = prompt(`New identity label (${extPart}):`, namePart)
+      if (newName && newName !== namePart) {
+        const fullNewName = newName + extPart
+        try {
+          await driveApi.rename({ 
+            old_key: oldFile.r2_key,
+            new_name: fullNewName
+          })
+          // 物理加固：局部刷新逻辑
+          const target = files.value.find(f => f.r2_key === oldFile.r2_key)
+          if (target) {
+            target.name = fullNewName
+            // 注意：如果后端改变了 r2_key (路径相关)，这里也需要更新
+            // 假设重命名不改变父路径，则 r2_key 可能会变
+            // 安全起见，重命名后还是刷一下比较稳，或者让后端返回新对象
+            refresh() 
+          }
+        } catch (e) {}
       }
       break
 
     default:
       uiStore.addNotice({ title: 'PROTOCOL_UPDATE', message: 'Action logic currently in deployment.', type: 'info' })
   }
+}
+
+const driveActionRename = async (oldKey, newName) => {
+  try {
+    await driveApi.rename({ 
+      old_key: oldKey,
+      new_name: newName
+    })
+    refresh()
+  } catch (e) {}
 }
 
 const handleDblClick = (file) => {
@@ -161,6 +246,13 @@ onMounted(() => fetchFiles('/'))
           </div>
 
           <div class="flex gap-5 items-center shrink-0">
+            <!-- 粘贴动作 (仅在剪贴板有数据时显示) -->
+            <button v-if="clipboard.keys.length > 0" 
+                    @click="handleClipboardExecute" 
+                    class="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest animate-pulse">
+              Paste ({{ clipboard.keys.length }})
+            </button>
+
             <!-- 加载状态字 (物理级增强) -->
             <div v-if="isSyncing" class="text-[9px] font-black text-blue-600 animate-sync-flash tracking-widest mr-2 flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>

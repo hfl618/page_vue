@@ -164,16 +164,23 @@ export function useDrive() {
   const selectSuggestion = (sug) => {
     pathInput.value = sug + '\\'
     showSuggestions.value = false
+    activeSuggestionIndex.value = -1 // 重置索引
     nextTick(() => { if (pathInputField.value) pathInputField.value.focus() })
   }
 
   const handlePathSubmit = () => {
+    // 物理加固：如果当前有选中的建议，先应用建议
     if (activeSuggestionIndex.value > -1) {
-      selectSuggestion(suggestions.value[activeSuggestionIndex.value])
-      return
+      pathInput.value = suggestions.value[activeSuggestionIndex.value] + '\\'
+      activeSuggestionIndex.value = -1
+      showSuggestions.value = false
+      // 继续执行跳转，不要 return
     }
+    
     let inputRaw = pathInput.value.trim().replace(/\\/g, '/')
     if (!inputRaw.startsWith('/')) inputRaw = '/' + inputRaw
+    
+    // 物理优化：执行跳转并退出编辑态
     fetchFiles(inputRaw)
     isEditingPath.value = false
     showSuggestions.value = false
