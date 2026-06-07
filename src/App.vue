@@ -1,6 +1,7 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { triggerGlobalEsc } from '@/utils/useEsc'
 
 /**
  * @description 核心入口框架
@@ -8,6 +9,21 @@ import { useRoute } from 'vue-router'
  */
 const route = useRoute()
 const isMainLayout = computed(() => route.meta.layout === 'main')
+
+const handleGlobalKeydown = (e) => {
+  if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+    console.debug('[App] Escape signal detected. Triggering global bus.')
+    triggerGlobalEsc(e)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleGlobalKeydown, true)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleGlobalKeydown, true)
+})
 </script>
 
 <template>
@@ -27,6 +43,7 @@ const isMainLayout = computed(() => route.meta.layout === 'main')
     <!-- 全局挂载组件 (自动导入) -->
     <LoadingOverlay />
     <NotificationContainer />
+    <IntegrityViolation />
   </div>
 </template>
 

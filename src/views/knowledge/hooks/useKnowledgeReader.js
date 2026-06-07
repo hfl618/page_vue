@@ -74,20 +74,28 @@ export function useKnowledgeReader() {
   }
 
   /**
-   * @description 生成大纲数据
+   * @description 生成大纲数据 (HTML 解析版)
    */
-  const generateOutline = (el) => {
-    if (!el) return
-    const headings = el.querySelectorAll('h1, h2, h3')
+  const generateOutline = (html) => {
+    if (!html) return
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
+    const headings = doc.querySelectorAll('h1, h2, h3, h4')
     outline.value = Array.from(headings).map(h => ({
-      text: h.innerText.replace(/^#+\s/, ''),
+      text: h.innerText.trim(),
       level: h.tagName.toLowerCase(),
-      el: h
+      // 在渲染后通过 text 匹配真实节点
     }))
   }
 
-  const scrollToHeading = (el) => {
-    el.scrollIntoView({ behavior: 'smooth' })
+  const scrollToHeading = (text) => {
+    const container = document.querySelector('.article-content')
+    if (!container) return
+    const elements = Array.from(container.querySelectorAll('h1, h2, h3, h4'))
+    const target = elements.find(el => el.textContent.trim() === text.trim())
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
   return {

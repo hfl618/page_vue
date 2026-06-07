@@ -5,6 +5,13 @@ import { useUserStore } from '@/store/user'
 import { useUiStore } from '@/store/ui'
 import request from '@/api/request'
 
+/**
+ * @typedef {import('@/types').Article} Article
+ */
+
+/**
+ * @description 知识库业务逻辑 Hook
+ */
 export function useKnowledge() {
   console.info('[Hook] useKnowledge initialized')
   const router = useRouter()

@@ -15,10 +15,31 @@ export const useUiStore = defineStore('ui', () => {
     percent: 0
   })
 
+  const requestCount = ref(0)
   let _timer = null
   let _safetyTimer = null
+  let _debounceTimer = null
 
-  const showLoading = (title = 'LOADING', subtitle = 'ACCESSING ARCHIVE') => {
+  const showLoading = (title = 'LOADING', subtitle = 'ACCESSING ARCHIVE', debounce = 300) => {
+    requestCount.value++
+    
+    // 如果已经显示，直接更新标题（不重置进度以防抖动）
+    if (loading.show) {
+      loading.title = title
+      loading.subtitle = subtitle
+      return
+    }
+
+    // 防闪烁延迟
+    if (_debounceTimer) clearTimeout(_debounceTimer)
+    _debounceTimer = setTimeout(() => {
+      if (requestCount.value > 0) {
+        performShow(title, subtitle)
+      }
+    }, debounce)
+  }
+
+  const performShow = (title, subtitle) => {
     loading.show = true
     loading.title = title
     loading.subtitle = subtitle
@@ -34,13 +55,27 @@ export const useUiStore = defineStore('ui', () => {
       }
     }, 100)
 
-    // 8s 强制保底关闭，防止协议挂起
+    // 15s 强制保底关闭，防止协议挂起 (对于大文件上传可能需要更久)
     _safetyTimer = setTimeout(() => {
-      if (loading.show) hideLoading()
-    }, 8000)
+      if (loading.show) forceHideLoading()
+    }, 15000)
   }
 
   const hideLoading = () => {
+    requestCount.value = Math.max(0, requestCount.value - 1)
+    if (requestCount.value === 0) {
+      if (_debounceTimer) clearTimeout(_debounceTimer)
+      performHide()
+    }
+  }
+
+  const forceHideLoading = () => {
+    requestCount.value = 0
+    if (_debounceTimer) clearTimeout(_debounceTimer)
+    performHide()
+  }
+
+  const performHide = () => {
     if (_timer) clearInterval(_timer)
     if (_safetyTimer) clearTimeout(_safetyTimer)
     
@@ -76,12 +111,44 @@ export const useUiStore = defineStore('ui', () => {
     }
   }
 
+  // --- 全局设置 ---
+  const settings = reactive({
+    currencySymbol: '￥'
+  })
+
+  const setCurrencySymbol = (symbol) => {
+    settings.currencySymbol = symbol
+  }
+
+  // --- 系统完整性状态 ---
+  const integrityError = ref(null)
+
+  const reportIntegrityViolation = (error) => {
+    console.error('[INTEGRITY_VIOLATION]', error)
+    integrityError.value = {
+      message: error?.message || 'Unknown protocol violation.',
+      stack: error?.stack || '',
+      timestamp: new Date().toISOString()
+    }
+  }
+
+  const resetIntegrity = () => {
+    integrityError.value = null
+    window.location.reload()
+  }
+
   return {
     loading,
     notices,
+    settings,
+    integrityError,
     showLoading,
     hideLoading,
+    forceHideLoading,
     addNotice,
-    removeNotice
+    removeNotice,
+    setCurrencySymbol,
+    reportIntegrityViolation,
+    resetIntegrity
   }
 })

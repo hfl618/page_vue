@@ -5,6 +5,10 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+  },
   plugins: [
     vue(),
     AutoImport({
@@ -12,6 +16,7 @@ export default defineConfig({
         'vue',
         'vue-router',
         'pinia',
+        'vue-i18n',
         {
           '@/api/modules/categories': ['fetchCategories'],
           '@/api/modules/auth': ['login', 'signup', 'logout', 'checkUsername'],
@@ -31,7 +36,7 @@ export default defineConfig({
       dts: false,
     }),
     Components({
-      dirs: ['src/components', 'src/layouts', 'src/views/**/components'], // 增加页面组件扫描
+      dirs: ['src/components', 'src/layouts', 'src/views/**/components', 'src/views/**/parts'], // 增加 parts 扫描
       extensions: ['vue'],
       deep: true,
     }),
@@ -49,20 +54,23 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      // 这里的配置是生命线：将所有 /api 请求转发到 Flask
+      // 物理加固：使用 127.0.0.1 避免 IPv6 冲突，增加异常容错
       '/api': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        secure: false,
+        // 如果后端接口本身不带 /api 前缀，请取消下方 rewrite 的注释
+        // rewrite: (path) => path.replace(/^\/api/, '')
       },
-      // 允许上传图片
       '/upload': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        secure: false,
       },
-      // 关键：允许前端获取后端存放的工具图标
       '/tools/icon': {
         target: 'http://127.0.0.1:5000',
         changeOrigin: true,
+        secure: false,
       }
     }
   }

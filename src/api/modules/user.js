@@ -7,9 +7,10 @@ import request from '@/api/request'
 
 /**
  * @description 获取当前登录用户的详细个人档案
+ * @param {Object} [config] axios 配置
  * @returns {Promise<Object>} 用户资料对象
  */
-export const fetchMe = () => request.get('/v1/user/me')
+export const fetchMe = (config = {}) => request.get('/v1/user/me', config)
 
 /**
  * @description 获取当前用户的全量收藏 ID 列表

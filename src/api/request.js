@@ -7,8 +7,8 @@ import router from '@/router'
 
 const service = axios.create({
   baseURL: '/api',
-  timeout: 60000, // 强制改为 60s
-  withCredentials: true
+  timeout: 60000, 
+  // withCredentials: true // 物理降噪：在纯 Token 模式下暂时关闭，防止 Cookie 干扰
 })
 
 service.interceptors.request.use(
@@ -19,7 +19,16 @@ service.interceptors.request.use(
     }
     const token = storage.get(STORAGE_KEYS.TOKEN)
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+      // 暴力兼容方案：发送多种常见 Header，直到后端识别为止
+      const bearerToken = `Bearer ${token}`
+      config.headers['Authorization'] = bearerToken
+      config.headers['Token'] = token
+      config.headers['X-Token'] = token
+      
+      console.debug(`[Request] ${config.method?.toUpperCase()} ${config.url}`, {
+        hasToken: true,
+        authHeader: bearerToken.substring(0, 20) + '...'
+      })
     }
     return config
   },
@@ -45,7 +54,8 @@ service.interceptors.response.use(
         uiStore.addNotice({
           title: 'PROTOCOL_ERROR',
           message: `[Code: ${res.code}] ${res.msg || 'Unknown failure.'}`,
-          type: 'error'
+          type: 'error',
+          tag: 'protocol-err'
         })
       }
       return Promise.reject(new Error(res.msg || 'Error'))
@@ -85,6 +95,9 @@ service.interceptors.response.use(
           }
           break
         case RESPONSE_CODES.FORBIDDEN: message = `[${status}] Access protocol denied.`; break
+        case 423: 
+          message = `[DEACTIVATED] This module is currently suspended by system core. Please check API Registry.`; 
+          break
         case RESPONSE_CODES.NOT_FOUND: message = `[${status}] Registry path not found.`; break
         case RESPONSE_CODES.SERVER_ERROR: message = `[${status}] System core failure.`; break
         default: message = `PROTOCOL_ERR_${status}`; break

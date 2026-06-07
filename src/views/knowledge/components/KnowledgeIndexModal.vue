@@ -27,7 +27,8 @@ defineEmits([
 </script>
 
 <template>
-  <div v-if="show" @click="$emit('close')" class="fixed inset-0 z-[1000] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-6">
+  <Teleport to="body">
+    <div v-if="show" @click="$emit('close')" class="fixed inset-0 z-[100000] flex items-center justify-center bg-zinc-900/40 backdrop-blur-sm p-6">
       <div @click.stop class="w-full max-w-5xl bg-white border border-zinc-900 shadow-[8px_8px_0px_#18181b] flex flex-col max-h-[85vh]">
           <div class="p-8 border-b border-zinc-100 flex items-center justify-between gap-10">
               <div class="flex-1 relative text-left">
@@ -122,5 +123,6 @@ defineEmits([
               </div>
           </div>
       </div>
-  </div>
+    </div>
+  </Teleport>
 </template>

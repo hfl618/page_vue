@@ -64,6 +64,10 @@ onMounted(() => init())
             <router-link to="/tools/publish" class="text-[11px] font-black text-zinc-900 border-b-2 border-zinc-900 hover:bg-zinc-900 hover:text-white transition-all px-2 py-0.5 tracking-widest uppercase">
               + DEPLOY_ASSET
             </router-link>
+
+            <router-link to="/tools/api-manager" class="text-[11px] font-black text-zinc-900 border-b-2 border-zinc-900 hover:bg-zinc-900 hover:text-white transition-all px-2 py-0.5 tracking-widest uppercase ml-4">
+              API_REGISTRY
+            </router-link>
           </div>
         </div>
 

@@ -75,8 +75,17 @@ export function useAuth() {
     loading.value = true
     try {
       const data = await login(form.username, form.password)
+      console.log('[Login] Success data:', data)
+      
+      // 物理加固：自动识别 Token 字段或直接识别为 Token 字符串
+      const token = typeof data === 'string' ? data : (data?.token || data?.access_token)
+      
+      if (!token) {
+        throw new Error('AUTH_PROTOCOL_ERR: Token not found in response.')
+      }
+
       // 存储用户信息并跳转
-      userStore.setToken(data.token)
+      userStore.setToken(token)
       await userStore.fetchProfile()
       
       // 核心增强：读取重定向参数

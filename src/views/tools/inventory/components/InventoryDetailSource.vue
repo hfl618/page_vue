@@ -1,58 +1,105 @@
 <script setup>
+import { reactive, ref } from 'vue'
+import BaseSourceManager from '@/components/common/base/BaseSourceManager.vue'
+
 /**
- * @description 详情面板附件管理栏 (复原版：单行横向排布)
+ * @description 详情面板附件管理栏 (物理原名版)
+ * 职责：严格对齐数据库字段：img_path, doc_path, qrcode_path
  */
-defineProps({
+const props = defineProps({
   item: { type: Object, required: true }
 })
 
-const emit = defineEmits(['upload'])
+const emit = defineEmits(['upload', 'delete-source'])
+
+const loading = reactive({ image: false, doc: false, qr: false })
+
+const inputRefs = {
+  image: ref(null),
+  doc: ref(null)
+}
+
+const handleUploadTrigger = (type) => {
+  if (type === 'qr') {
+    handleRegenerateQR()
+  } else {
+    inputRefs[type].value?.click()
+  }
+}
+
+const handleRegenerateQR = async () => {
+  loading.qr = true
+  try {
+    // 关键：复用 upload 事件，标识为 qr 类型，通知父组件执行自动生成逻辑
+    await emit('upload', { type: 'qr' })
+    await new Promise(r => setTimeout(r, 1500))
+  } finally {
+    loading.qr = false
+  }
+}
+
+const onFileSelected = async (e, type) => {
+  const file = e.target.files[0]
+  if (!file) return
+  loading[type] = true
+  try {
+    await emit('upload', { type, file })
+    await new Promise(r => setTimeout(r, 1200))
+  } finally {
+    loading[type] = false
+    e.target.value = ''
+  }
+}
+
+const handleWipe = async (type) => {
+  loading[type] = true
+  try {
+    await emit('delete-source', type)
+  } finally {
+    loading[type] = false
+  }
+}
 </script>
 
 <template>
-  <div class="mt-1 flex gap-5 items-center">
-    <span class="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Registry Source:</span>
+  <div class="flex gap-4 items-center">
+    <input :ref="inputRefs.image" type="file" accept="image/*" class="hidden" @change="onFileSelected($event, 'image')">
+    <input :ref="inputRefs.doc" type="file" accept=".pdf,.doc,.docx" class="hidden" @change="onFileSelected($event, 'doc')">
+
+    <span class="text-[8px] font-black text-zinc-400 uppercase tracking-widest text-left shrink-0">Registry Source:</span>
     
-    <!-- 图片资源 -->
-    <div class="flex items-center gap-1.5">
-      <button 
-        @click="emit('upload', 'image')"
-        class="text-[8px] font-black px-1.5 py-0.5 transition-all uppercase flex items-center gap-1"
-        :class="item.img ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-zinc-50 text-zinc-400 border border-zinc-100 hover:border-zinc-300'"
-      >
-        <svg v-if="item.img" class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
-        <svg v-else class="w-2 h-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
-        Image
-      </button>
-      <span v-if="item.img" @click="emit('upload', 'image')" class="text-[7px] text-zinc-300 font-bold uppercase cursor-pointer hover:text-zinc-900 underline underline-offset-2">Redo</span>
-    </div>
+    <!-- 1. 图片资源 (Key: img_path) -->
+    <BaseSourceManager 
+      type="image"
+      label="Image"
+      :path="item.img_path"
+      :loading="loading.image"
+      @upload="handleUploadTrigger('image')"
+      @redo="handleUploadTrigger('image')"
+      @wipe="handleWipe('image')"
+    />
 
-    <!-- 文档资源 -->
-    <div class="flex items-center gap-1.5">
-      <button 
-        @click="emit('upload', 'doc')"
-        class="text-[8px] font-black px-1.5 py-0.5 transition-all uppercase flex items-center gap-1"
-        :class="item.hasFile ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-zinc-50 text-zinc-400 border border-zinc-100 hover:border-zinc-300'"
-      >
-        <svg v-if="item.hasFile" class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
-        <svg v-else class="w-2 h-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
-        Doc
-      </button>
-      <span v-if="item.hasFile" @click="emit('upload', 'doc')" class="text-[7px] text-zinc-300 font-bold uppercase cursor-pointer hover:text-zinc-900 underline underline-offset-2">Redo</span>
-    </div>
+    <!-- 2. 文档资源 (Key: doc_path) -->
+    <BaseSourceManager 
+      type="doc"
+      label="Doc"
+      :path="item.doc_path"
+      :exists="item.hasFile"
+      :loading="loading.doc"
+      @upload="handleUploadTrigger('doc')"
+      @redo="handleUploadTrigger('doc')"
+      @wipe="handleWipe('doc')"
+    />
 
-    <!-- 二维码资源 -->
-    <div class="flex items-center gap-1.5">
-      <button 
-        @click="emit('upload', 'qr')"
-        class="text-[8px] font-black px-1.5 py-0.5 transition-all uppercase flex items-center gap-1"
-        :class="item.qrCode ? 'bg-violet-50 text-violet-700 border border-violet-100' : 'bg-zinc-50 text-zinc-400 border border-zinc-100 hover:border-zinc-300'"
-      >
-        <svg v-if="item.qrCode" class="w-2 h-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4"><path d="M5 13l4 4L19 7"/></svg>
-        <svg v-else class="w-2 h-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M6 18L18 6M6 6l12 12"/></svg>
-        QR
-      </button>
-      <span v-if="item.qrCode" @click="emit('upload', 'qr')" class="text-[7px] text-zinc-300 font-bold uppercase cursor-pointer hover:text-zinc-900 underline underline-offset-2">Redo</span>
-    </div>
+    <!-- 3. 二维码资源 (Key: qrcode_path) -->
+    <BaseSourceManager 
+      type="qr"
+      label="QR"
+      :path="item.qrcode_path"
+      :loading="loading.qr"
+      @upload="handleUploadTrigger('qr')"
+      @redo="handleUploadTrigger('qr')"
+      @wipe="handleWipe('qr')"
+    />
   </div>
 </template>

@@ -1,67 +1,107 @@
 <script setup>
+import { onMounted, ref } from 'vue'
+import { useKnowledgeEditor } from './hooks/useKnowledgeEditor'
+import { useEditorStore } from '@/store/editor'
+import EditorOutline from './components/EditorOutline.vue'
+import TiptapEditor from './components/TiptapEditor.vue'
+import MediaManager from './components/MediaManager.vue'
+
 /**
- * @description 知识库编辑器
- * 逻辑解耦版：业务见 hooks/useKnowledgeEditor.js, 编辑器见 components/VditorEditor.vue
+ * @description 知识库沉浸式编辑器 (三层架构版)
  */
 const {
   article, articleId, categories, parents, wordCount,
   showDesigner, init, handleSave
 } = useKnowledgeEditor()
 
-// 初始化同步
-onMounted(() => init())
+const editorStore = useEditorStore()
+const editorRef = ref(null)
+
+// 处理媒体插入指令
+const handleInsertMedia = (media) => {
+  if (editorRef.value) {
+    editorRef.value.insertMedia(media)
+  }
+}
+
+// 拦截粘贴的文件并加入素材库
+const handleFileInjected = (file) => {
+  const url = URL.createObjectURL(file)
+  const isImage = file.type.startsWith('image/')
+  const mediaObj = {
+    id: Date.now() + Math.random(),
+    name: file.name || 'Pasted_Image.png',
+    type: isImage ? 'image' : 'file',
+    url: url,
+    size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
+  }
+  editorStore.addMedia(mediaObj)
+  handleInsertMedia(mediaObj)
+}
+
+onMounted(() => {
+  init()
+  // 默认开启大纲和素材库
+  editorStore.setDockActive(true)
+})
 </script>
 
 <template>
-  <div class="h-full flex flex-row bg-white overflow-hidden" translate="no">
+  <div class="h-full flex flex-row bg-[#fafafa] overflow-hidden select-none" translate="no">
     
-    <!-- 左侧工业岛 -->
-    <aside class="w-[52px] border-r border-zinc-100 flex flex-col items-center py-6 shrink-0 bg-white z-20">
-        <div class="flex flex-col gap-4">
-            <button @click="handleSave" class="island-btn bg-zinc-900 text-white" title="Sync Push">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M5 13 l 4 4 L 19 7"/></svg>
-            </button>
-            <button @click="showDesigner = !showDesigner" class="island-btn" :class="showDesigner ? 'bg-zinc-100' : ''" title="Archive Designer">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M4 5 a 1 1 0 0 1 1 -1 h 14 a 1 1 0 0 1 1 1 v 2 a 1 1 0 0 1 -1 1 H 5 a 1 1 0 0 1 -1 -1 V 5 z M 4 13 a 1 1 0 0 1 1 -1 h 6 a 1 1 0 0 1 1 1 v 6 a 1 1 0 0 1 -1 1 H 5 a 1 1 0 0 1 -1 -1 v -6 z M 16 13 a 1 1 0 0 1 1 -1 h 2 a 1 1 0 0 1 1 1 v 6 a 1 1 0 0 1 -1 1 h -2 a 1 1 0 0 1 -1 -1 v -6 z"/></svg>
-            </button>
-            <div class="h-px w-6 bg-zinc-100 my-2"></div>
-            <button class="island-btn" @click="article.visibility = article.visibility === 'public' ? 'private' : 'public'">
-                <svg class="w-4 h-4" :class="article.visibility === 'public' ? 'text-emerald-500' : 'text-zinc-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                    <path v-if="article.visibility === 'public'" d="M15 12 a 3 3 0 1 1 -6 0 a 3 3 0 0 1 6 0 z M 2.458 12 C 3.732 7.943 7.523 5 12 5 s 8.268 2.943 9.542 7"/>
-                    <path v-else d="M12 15 v 2 m -6 4 h 12 a 2 2 0 0 0 2 -2 v -6 a 2 2 0 0 0 -2 -2 H 6 a 2 2 0 0 0 -2 2 v 6 a 2 2 0 0 0 2 2 z m 10 -10 V 7 a 4 4 0 0 0 -8 0 v 4 h 8 z"/>
-                </svg>
-            </button>
-        </div>
-    </aside>
+    <!-- 1. 左侧大纲栏 -->
+    <div class="w-72 shrink-0 h-full border-r border-zinc-100 hidden lg:block">
+      <EditorOutline />
+    </div>
 
-    <div class="flex-1 flex flex-col min-w-0">
-        <header class="h-14 border-b border-zinc-50 flex items-center justify-between px-10 shrink-0 bg-white">
+    <!-- 2. 中间核心编辑区 -->
+    <div class="flex-1 flex flex-col min-w-0 bg-white shadow-[0_0_40px_rgba(0,0,0,0.02)] z-10">
+        <!-- 紧凑型页眉 -->
+        <header class="h-16 border-b border-zinc-50 flex items-center justify-between px-10 shrink-0 bg-white/80 backdrop-blur-md">
             <div class="flex items-center gap-6 flex-1">
-                <input type="text" v-model="article.title" placeholder="NOMENCLATURE..." class="text-[18px] font-black uppercase tracking-tight outline-none w-full max-w-2xl bg-transparent placeholder:text-zinc-100">
+                <div class="w-1.5 h-1.5 bg-zinc-900 animate-pulse"></div>
+                <input type="text" v-model="article.title" placeholder="PROTOCOL_NOMENCLATURE..." 
+                       class="text-[16px] font-black uppercase tracking-tight outline-none w-full max-w-2xl bg-transparent placeholder:text-zinc-100">
             </div>
-            <div class="flex items-center gap-6">
-                <div class="flex flex-col items-end shrink-0">
-                    <span class="text-[11px] font-black font-mono text-zinc-900 leading-none">{{ wordCount }}</span>
-                    <span class="text-[7px] font-bold text-zinc-300 uppercase tracking-widest">Words</span>
+            
+            <div class="flex items-center gap-8">
+                <div class="flex flex-col items-end">
+                    <span class="text-[12px] font-black font-mono text-zinc-900 leading-none">{{ wordCount }}</span>
+                    <span class="text-[7px] font-bold text-zinc-300 uppercase tracking-widest mt-1">Metrics</span>
                 </div>
                 <div class="h-8 w-px bg-zinc-100"></div>
-                <BaseButton @click="handleSave" class="!py-1.5 !w-auto px-6">Sync Registry</BaseButton>
+                
+                <div class="flex gap-2">
+                  <BaseIconButton @click="showDesigner = !showDesigner" :active="showDesigner" title="Module Designer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                  </BaseIconButton>
+                  <BaseButton @click="handleSave" class="!py-2 !px-8 !w-auto">Sync Push</BaseButton>
+                </div>
             </div>
         </header>
 
-        <main class="flex-1 relative">
-            <!-- 原子化编辑器组件 -->
-            <VditorEditor v-model="article.content" />
+        <main class="flex-1 relative overflow-hidden">
+            <TiptapEditor 
+              ref="editorRef"
+              v-model="article.content" 
+              @file-injected="handleFileInjected"
+            />
 
-            <!-- 设计师抽屉 -->
+            <!-- 浮动设计抽屉 (覆盖在编辑器右侧) -->
             <Transition name="slide-right">
-                <div v-if="showDesigner" class="absolute inset-y-0 right-0 w-96 bg-white border-l border-zinc-900 shadow-[-10px_0px_50px_rgba(0,0,0,0.05)] z-30 flex flex-col">
-                    <div class="p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
-                        <span class="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-900">Module Designer</span>
-                        <button @click="showDesigner = false" class="text-zinc-400 hover:text-zinc-900 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 18 L 18 6 M 6 6 l 12 12"/></svg></button>
+                <div v-if="showDesigner" class="absolute inset-y-0 right-0 w-[400px] bg-white border-l border-zinc-900 shadow-[-20px_0px_60px_rgba(0,0,0,0.1)] z-30 flex flex-col">
+                    <div class="p-8 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+                        <div>
+                          <h4 class="text-[12px] font-black uppercase tracking-[0.2em] text-zinc-900">Module Designer</h4>
+                          <p class="text-[8px] text-zinc-400 font-bold uppercase mt-1">Configuring registry node metadata</p>
+                        </div>
+                        <BaseIconButton @click="showDesigner = false">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                        </BaseIconButton>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-8 space-y-12 custom-scrollbar text-left bg-white">
-                        <div class="space-y-8">
+                    
+                    <div class="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar text-left bg-white">
+                        <section class="space-y-8">
                             <div class="DesignerField">
                                 <label>Registry Hierarchy</label>
                                 <select v-model="article.parent_id" class="DesignerInput">
@@ -75,12 +115,27 @@ onMounted(() => init())
                                     <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="space-y-8 pt-8 border-t border-zinc-100">
+                            <div class="DesignerField">
+                                <label>Visibility Protocol</label>
+                                <BaseSegmented 
+                                  v-model="article.visibility" 
+                                  :options="[
+                                    { label: 'PUBLIC', value: 'public' },
+                                    { label: 'PRIVATE', value: 'private' }
+                                  ]" 
+                                />
+                            </div>
+                        </section>
+
+                        <section class="pt-10 border-t border-zinc-100 space-y-8">
                             <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900">Bundle definition</span>
+                                <div>
+                                  <span class="text-[10px] font-black uppercase tracking-widest text-zinc-900">Bundle Definition</span>
+                                  <p class="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Initialize as container node</p>
+                                </div>
                                 <PhysicalSwitch v-model="article.is_collection" />
                             </div>
+                            
                             <template v-if="article.is_collection">
                                 <div class="DesignerField">
                                     <label>Bundle Nomenclature</label>
@@ -89,27 +144,42 @@ onMounted(() => init())
                                 <div class="DesignerField">
                                     <label>Visual Protocol (Icon)</label>
                                     <div class="grid grid-cols-5 gap-2">
-                                        <button v-for="icon in ['box','code','database','cpu','cloud']" :key="icon" @click="article.collection_icon = icon" class="w-full aspect-square border flex items-center justify-center transition-all" :class="article.collection_icon === icon ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-100 text-zinc-400'">
-                                            <span class="text-[9px] font-black uppercase">{{ icon.substring(0,3) }}</span>
+                                        <button v-for="icon in ['box','code','database','cpu','cloud']" 
+                                                :key="icon" 
+                                                @click="article.collection_icon = icon" 
+                                                class="w-full aspect-square border flex items-center justify-center transition-all group" 
+                                                :class="article.collection_icon === icon ? 'bg-zinc-900 border-zinc-900 text-white' : 'border-zinc-100 text-zinc-300 hover:border-zinc-400 hover:text-zinc-900'">
+                                            <span class="text-[8px] font-black uppercase tracking-tighter">{{ icon }}</span>
                                         </button>
                                     </div>
                                 </div>
                             </template>
-                        </div>
+                        </section>
                     </div>
+
+                    <footer class="p-8 border-t border-zinc-100 bg-zinc-50 flex justify-end">
+                      <BaseButton @click="showDesigner = false" variant="primary" class="!w-full">Confirm Config</BaseButton>
+                    </footer>
                 </div>
             </Transition>
         </main>
     </div>
+
+    <!-- 3. 右侧素材管理栏 -->
+    <MediaManager @insert-media="handleInsertMedia" />
+
   </div>
 </template>
 
 <style scoped>
-.island-btn { width: 36px; height: 36px; border: 1px solid #e4e4e7; display: flex; align-items: center; justify-content: center; background: white; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); outline: none; }
-.island-btn:hover { border-color: #18181b; color: #18181b; transform: translate(-2px, -2px); box-shadow: 4px 4px 0px #f4f4f5; }
-.DesignerField label { display: block; font-size: 9px; font-weight: 900; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.1em; margin-bottom: 10px; }
-.DesignerInput { width: 100%; background-color: #fafafa; border: 1px solid #f4f4f5; padding: 12px 14px; font-size: 11px; font-weight: 900; text-transform: uppercase; outline: none; transition: all 0.3s; }
-.DesignerInput:focus { border-color: #18181b; background-color: #fff; }
-.slide-right-enter-active, .slide-right-leave-active { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.DesignerField label { display: block; font-size: 9px; font-weight: 900; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.15em; margin-bottom: 12px; }
+.DesignerInput { width: 100%; background-color: #fafafa; border: 1px solid #f4f4f5; padding: 14px; font-size: 11px; font-weight: 900; text-transform: uppercase; outline: none; transition: all 0.2s; }
+.DesignerInput:focus { border-color: #18181b; background-color: #fff; box-shadow: 4px 4px 0px #f4f4f5; }
+
+.slide-right-enter-active, .slide-right-leave-active { transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 .slide-right-enter-from, .slide-right-leave-to { transform: translateX(100%); }
+
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; }
 </style>

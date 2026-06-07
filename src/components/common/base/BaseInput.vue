@@ -12,10 +12,20 @@ const props = defineProps({
   error: { type: String, default: '' },
   success: { type: Boolean, default: false },
   variant: { type: String, default: 'standard' }, // standard, underlined
+  radius: { type: String, default: 'rounded-none' },
   
   // 允许外部覆盖核心样式
-  inputClass: { type: String, default: '' }
+  inputClass: { type: String, default: '' },
+  // 新增：尺寸扩展
+  size: { type: String, default: 'md' } // xs, sm, md, lg
 })
+
+const sizeClasses = {
+  xs: 'px-2 py-1 text-[9px]',
+  sm: 'px-3 py-1.5 text-[10px]',
+  md: 'px-4 py-2 text-[11px]',
+  lg: 'px-5 py-3 text-[13px]'
+}
 
 defineEmits(['update:modelValue'])
 </script>
@@ -30,11 +40,15 @@ defineEmits(['update:modelValue'])
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
-        class="w-full outline-none transition-all font-black uppercase tracking-widest text-[11px] placeholder:text-zinc-300 placeholder:font-bold"
+        class="w-full outline-none transition-all font-bold uppercase tracking-widest placeholder:text-zinc-300 placeholder:font-medium"
         :class="[
           // 变体基础样式
-          variant === 'standard' ? 'border-2 border-zinc-100 bg-white px-4 py-2.5 focus:border-zinc-900' : 'border-b-2 border-zinc-100 bg-transparent px-0 py-2 focus:border-zinc-900',
+          variant === 'standard' ? 'border border-zinc-200 bg-white focus:border-zinc-900 focus:shadow-sm' : 'border-b-2 border-zinc-200 bg-transparent px-0 py-1 focus:border-zinc-900',
           
+          variant === 'standard' ? sizeClasses[size] : '',
+          
+          radius,
+
           // 状态颜色
           error ? '!border-red-500 bg-red-50/30' : (success ? '!border-emerald-500 bg-emerald-50/30' : ''),
           

@@ -17,7 +17,7 @@ const {
 
 const handleIndexItemClick = (item) => {
   if (item.is_collection) openStack(item)
-  else window.location.href = `/knowledge/read/${item.id}`
+  else router.push(`/knowledge/read/${item.id}`)
 }
 
 onMounted(() => {

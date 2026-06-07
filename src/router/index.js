@@ -55,6 +55,12 @@ const routes = [
     meta: { layout: 'main', title: 'DEPLOY', parent: 'DISCOVERY', requiresAuth: true }
   },
   {
+    path: '/tools/api-manager',
+    name: 'api-manager',
+    component: () => import('../views/tools/api-manager/index.vue'),
+    meta: { layout: 'main', title: 'API_REGISTRY', parent: 'DISCOVERY', requiresAuth: true }
+  },
+  {
     path: '/profile',
     name: 'profile',
     component: () => import('../views/user/UserProfile.vue'),
@@ -71,6 +77,18 @@ const routes = [
     name: 'login', 
     component: () => import('../views/auth/LoginView.vue'), 
     meta: { layout: 'auth', title: 'LOGIN' } 
+  },
+  { 
+    path: '/signup', 
+    name: 'signup', 
+    component: () => import('../views/auth/SignupView.vue'), 
+    meta: { layout: 'auth', title: 'SIGNUP' } 
+  },
+  { 
+    path: '/forgot-password', 
+    name: 'forgot-password', 
+    component: () => import('../views/auth/LoginView.vue'), // 暂时复用，或指向专用页
+    meta: { layout: 'auth', title: 'RECOVERY' } 
   }
 ]
 

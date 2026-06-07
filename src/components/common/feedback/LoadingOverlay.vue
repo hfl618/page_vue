@@ -6,39 +6,41 @@ const uiStore = useUiStore()
 </script>
 
 <template>
-  <Transition name="fade">
-    <div v-if="uiStore.loading.show" class="fixed inset-0 z-[200000] flex items-center justify-center bg-white/10 backdrop-blur-xl" translate="no">
-      
-      <!-- 物理容器 -->
-      <div class="loading-box border border-zinc-900 shadow-[8px_8px_0px_#f4f4f5] px-12 py-10 flex flex-col items-center gap-8 bg-white">
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="uiStore.loading.show" class="fixed inset-0 z-[200000] flex items-center justify-center bg-white/10 backdrop-blur-xl" translate="no">
         
-        <!-- 核心 Loader 单元 -->
-        <div class="w-14 h-14 border-2 border-zinc-900/10 flex items-center justify-center relative">
-          <div class="heflos-loader-square"></div>
-          <!-- 装饰角 -->
-          <div class="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-zinc-900"></div>
-          <div class="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-zinc-900"></div>
-        </div>
-        
-        <!-- 文本与进度 -->
-        <div class="flex flex-col items-center gap-3">
-          <div class="flex flex-col items-center text-center">
-            <span class="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">{{ uiStore.loading.title || 'TRANSMITTING' }}</span>
-            <span class="text-[11px] font-black text-zinc-900 uppercase tracking-tight mt-1">{{ uiStore.loading.subtitle || 'SYNC_CORE_ACTIVE' }}</span>
+        <!-- 物理容器 -->
+        <div class="loading-box border border-zinc-900 shadow-[8px_8px_0px_#f4f4f5] px-12 py-10 flex flex-col items-center gap-8 bg-white">
+          
+          <!-- 核心 Loader 单元 -->
+          <div class="w-14 h-14 border-2 border-zinc-900/10 flex items-center justify-center relative">
+            <div class="heflos-loader-square"></div>
+            <!-- 装饰角 -->
+            <div class="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-zinc-900"></div>
+            <div class="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-zinc-900"></div>
           </div>
           
-          <div class="flex flex-col items-center gap-2 mt-4">
-            <div class="w-56 h-1 bg-zinc-100 relative overflow-hidden">
-              <div class="absolute inset-y-0 left-0 bg-zinc-900 transition-all duration-300" 
-                   :style="{ width: uiStore.loading.percent + '%' }"></div>
+          <!-- 文本与进度 -->
+          <div class="flex flex-col items-center gap-3">
+            <div class="flex flex-col items-center text-center">
+              <span class="text-[9px] font-black text-zinc-400 uppercase tracking-[0.3em]">{{ uiStore.loading.title || 'TRANSMITTING' }}</span>
+              <span class="text-[11px] font-black text-zinc-900 uppercase tracking-tight mt-1">{{ uiStore.loading.subtitle || 'SYNC_CORE_ACTIVE' }}</span>
             </div>
-            <span class="text-[10px] font-mono font-black text-zinc-900">{{ Math.round(uiStore.loading.percent) }}%</span>
+            
+            <div class="flex flex-col items-center gap-2 mt-4">
+              <div class="w-56 h-1 bg-zinc-100 relative overflow-hidden">
+                <div class="absolute inset-y-0 left-0 bg-zinc-900 transition-all duration-300" 
+                     :style="{ width: uiStore.loading.percent + '%' }"></div>
+              </div>
+              <span class="text-[10px] font-mono font-black text-zinc-900">{{ Math.round(uiStore.loading.percent) }}%</span>
+            </div>
           </div>
-        </div>
 
+        </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>

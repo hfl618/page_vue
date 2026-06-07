@@ -1,12 +1,13 @@
 <script setup>
 /**
- * @description 通用工业级数据表格组件 (支持全屏拉伸版)
+ * @description 通用工业级数据表格组件 (支持三态排序与全屏拉伸版)
  * 采用无状态设计，仅负责展示和基础事件分发。
  */
 const props = defineProps({
   columns: {
     type: Array,
     required: true
+    // 格式: { key: string, label: string, width?: string, align?: 'left'|'center'|'right', sortable?: boolean }
   },
   items: {
     type: Array,
@@ -27,18 +28,44 @@ const props = defineProps({
   radius: {
     type: String,
     default: 'rounded-none'
-  }
+  },
+  // 当前排序字段
+  sortKey: { type: String, default: '' },
+  // 当前排序方向: 'asc' | 'desc' | ''
+  sortOrder: { type: String, default: '' }
 })
 
-const emit = defineEmits(['toggle-all', 'toggle-select', 'row-click'])
+const emit = defineEmits(['toggle-all', 'toggle-select', 'row-click', 'sort'])
 
 const isSelected = (item) => {
   return props.selectedItems.some(i => i.id === item.id)
 }
+
+/**
+ * 处理表头点击排序 (实现：取消 -> 升序 -> 降序 -> 取消)
+ */
+const handleSort = (col) => {
+  if (!col.sortable) return
+  
+  let newKey = col.key
+  let newOrder = 'asc'
+  
+  if (props.sortKey === col.key) {
+    if (props.sortOrder === 'asc') {
+      newOrder = 'desc'
+    } else if (props.sortOrder === 'desc') {
+      newKey = ''
+      newOrder = ''
+    } else {
+      newOrder = 'asc'
+    }
+  }
+  
+  emit('sort', { key: newKey, order: newOrder })
+}
 </script>
 
 <template>
-  <!-- 优化：增加 flex-1 和 flex flex-col，确保能够占满父容器高度 -->
   <div :class="['bg-white overflow-hidden flex-1 flex flex-col', radius]">
     <div class="flex-1 overflow-auto custom-scrollbar">
       <table class="w-full text-left border-collapse table-fixed">
@@ -61,12 +88,39 @@ const isSelected = (item) => {
               v-for="col in columns" 
               :key="col.key" 
               :class="[
-                'py-2 px-4',
-                col.align === 'center' ? 'text-center' : (col.align === 'right' ? 'text-right' : 'text-left')
+                'py-2 px-4 select-none group/th relative',
+                col.align === 'center' ? 'text-center' : (col.align === 'right' ? 'text-right' : 'text-left'),
+                col.sortable ? 'cursor-pointer hover:bg-zinc-50 transition-colors' : ''
               ]"
               :style="{ width: col.width }"
+              @click="handleSort(col)"
             >
-              {{ col.label }}
+              <div :class="['flex items-center gap-1.5', col.align === 'center' ? 'justify-center' : (col.align === 'right' ? 'justify-end' : '')]">
+                <span>{{ col.label }}</span>
+                
+                <!-- 排序图标 -->
+                <div v-if="col.sortable" class="flex flex-col items-center ml-1">
+                  <svg 
+                    class="w-2.5 h-2.5 transition-colors translate-y-[1px]" 
+                    :class="[sortKey === col.key && sortOrder === 'asc' ? 'text-zinc-900' : 'text-zinc-200 group-hover/th:text-zinc-300']"
+                    fill="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path d="M12 4l-8 8h16z" />
+                  </svg>
+                  <svg 
+                    class="w-2.5 h-2.5 transition-colors -translate-y-[1px]" 
+                    :class="[sortKey === col.key && sortOrder === 'desc' ? 'text-zinc-900' : 'text-zinc-200 group-hover/th:text-zinc-300']"
+                    fill="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path d="M12 20l8-8H4z" />
+                  </svg>
+                </div>
+
+                <!-- 筛选插槽 (新增) -->
+                <div @click.stop class="flex items-center ml-auto">
+                  <slot :name="`filter-${col.key}`" :column="col"></slot>
+                </div>
+              </div>
             </th>
           </tr>
         </thead>

@@ -3,24 +3,31 @@ import { computed } from 'vue'
 import InventoryDetailInfo from './InventoryDetailInfo.vue'
 
 /**
- * @description 元器件详情面板 (Shell 组件)
+ * @description 元器件详情面板 (物理原名对齐版)
+ * 键名对齐 API: location, model, quantity, supplier, buy_time...
  */
 const props = defineProps({
   selectedItems: { type: Array, default: () => [] }
 })
 
-const emit = defineEmits(['adjust-stock', 'edit', 'delete', 'sync', 'export', 'upload-source'])
+const emit = defineEmits(['adjust-stock', 'edit', 'delete', 'sync', 'export', 'upload-source', 'delete-source'])
 
 const mainItem = computed(() => props.selectedItems[0] || null)
 const isBulk = computed(() => props.selectedItems.length > 1)
 
-// 物理属性映射
+/**
+ * 物理规格矩阵：严格对齐数据库原始字段
+ */
 const specs = computed(() => {
   if (!mainItem.value) return []
+  const item = mainItem.value
   return [
-    { label: 'Bin', value: mainItem.value.bin || '--' },
-    { label: 'Registry', value: mainItem.value.category || '?' },
-    { label: 'MPN', value: mainItem.value.mpn || '--' }
+    { label: 'Bin', value: item.location || '--' },
+    { label: 'Registry', value: item.category || '--' },
+    { label: 'MPN_Model', value: item.model || '--' },
+    { label: 'Footprint', value: item.package || '--' },
+    { label: 'Unit_Cost', value: item.price ? `￥${item.price}` : '--' },
+    { label: 'UOM', value: item.unit || 'pcs' }
   ]
 })
 </script>
@@ -64,7 +71,8 @@ const specs = computed(() => {
           @adjust-stock="(id, delta) => emit('adjust-stock', id, delta)"
           @edit="(item) => emit('edit', item)"
           @delete="() => emit('delete')"
-          @upload-source="(type) => emit('upload-source', type)"
+          @upload-source="(payload) => emit('upload-source', payload)"
+          @delete-source="(type) => emit('delete-source', type)"
         />
       </template>
     </div>

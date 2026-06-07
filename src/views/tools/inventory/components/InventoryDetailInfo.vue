@@ -5,42 +5,40 @@ import InventoryDetailRemarks from './InventoryDetailRemarks.vue'
 import InventoryDetailSource from './InventoryDetailSource.vue'
 
 /**
- * @description 元器件详细信息展示区 (最终原子重构版)
+ * @description 元器件单项详情展示 (Orchestrator)
  */
 defineProps({
   item: { type: Object, required: true },
   specs: { type: Array, required: true }
 })
 
-const emit = defineEmits(['adjust-stock', 'edit', 'delete', 'upload-source'])
+const emit = defineEmits(['adjust-stock', 'edit', 'delete', 'upload-source', 'delete-source'])
 </script>
 
 <template>
-  <div class="flex flex-col h-full overflow-hidden">
-    
-    <!-- 1. 固定头部 (原子组件) -->
+  <div class="flex flex-col h-full bg-white relative">
+    <!-- 固定头 -->
     <InventoryDetailHeader 
       :item="item" 
       @adjust-stock="(id, delta) => emit('adjust-stock', id, delta)"
-      @edit="(val) => emit('edit', val)"
+      @edit="(item) => emit('edit', item)"
       @delete="() => emit('delete')"
     />
 
-    <!-- 2. 可滚动内容区 -->
-    <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-3">
-      <div class="flex flex-col gap-3">
-        <!-- 规格矩阵 -->
-        <InventoryDetailSpecs :item="item" :specs="specs" />
+    <!-- 可滚动内容区 (优化：py-2 减小边距, gap-1.5 紧凑排列) -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar px-6 py-2 flex flex-col gap-1.5">
+      <!-- 规格矩阵 -->
+      <InventoryDetailSpecs :item="item" :specs="specs" />
 
-        <!-- 技术备注 -->
-        <InventoryDetailRemarks :remark="item.remark" />
+      <!-- 技术备注 (始终显示，内部处理空值) -->
+      <InventoryDetailRemarks :remark="item.remark" />
 
-        <!-- 资源管理 (监听上传事件) -->
-        <InventoryDetailSource 
-          :item="item" 
-          @upload="(type) => emit('upload-source', type)"
-        />
-      </div>
+      <!-- 资源管理 -->
+      <InventoryDetailSource 
+        :item="item" 
+        @upload="(payload) => emit('upload-source', payload)"
+        @delete-source="(type) => emit('delete-source', type)"
+      />
     </div>
   </div>
 </template>
